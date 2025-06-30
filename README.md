@@ -420,6 +420,6 @@ mysql.password=your_password                   # MySQL密码
 
 ---
 
-**许可证**: MIT License  
+**许可证**: Apache 2.0 License  
 **版本**: v1.0 MVP  
 **最后更新**: 2025年1月
