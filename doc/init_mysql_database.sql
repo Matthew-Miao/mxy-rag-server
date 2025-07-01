@@ -48,43 +48,55 @@ CREATE TABLE IF NOT EXISTS `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表 - 存储系统用户的基本信息和认证数据';
 
 -- =====================================================
--- 第三步：创建聊天会话表
+-- 聊天会话表（支持 Spring AI 聊天记忆）
 -- =====================================================
-
 CREATE TABLE IF NOT EXISTS `chat_sessions` (
     `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键（自增）',
     `user_id` varchar(50) NOT NULL COMMENT '用户标识（用户ID或会话标识）',
+    `conversation_id` varchar(100) DEFAULT NULL COMMENT 'Spring AI 对话ID（用于ChatMemoryRepository）',
     `title` varchar(200) NOT NULL COMMENT '会话标题（自动生成或用户自定义）',
     `description` text DEFAULT NULL COMMENT '会话描述（可选的会话备注信息）',
     `message_count` int(11) NOT NULL DEFAULT '0' COMMENT '消息数量（该会话中的消息总数）',
     `total_tokens` int(11) NOT NULL DEFAULT '0' COMMENT 'Token总数（该会话消耗的总Token数）',
     `status` varchar(20) NOT NULL DEFAULT 'active' COMMENT '会话状态（active:活跃；archived:归档；deleted:已删除）',
+    `max_context_messages` int(11) NOT NULL DEFAULT '20' COMMENT '最大上下文消息数（记忆窗口大小）',
+    `context_strategy` varchar(50) NOT NULL DEFAULT 'sliding_window' COMMENT '上下文策略（sliding_window:滑动窗口；summary:摘要；hybrid:混合）',
+    `memory_retention_hours` int(11) NOT NULL DEFAULT '168' COMMENT '记忆保留时间（小时，默认7天）',
+    `last_activity_time` datetime DEFAULT NULL COMMENT '最后活动时间（用于记忆清理）',
     `deleted` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '0正常，1删除',
     `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
     `creator` varchar(64) NOT NULL DEFAULT 'system' COMMENT '创建人',
     `modifier` varchar(64) NOT NULL DEFAULT 'system' COMMENT '修改人',
     PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_conversation_id` (`conversation_id`),
     KEY `idx_user_id` (`user_id`),
     KEY `idx_status` (`status`),
+    KEY `idx_last_activity` (`last_activity_time`),
+    KEY `idx_user_status_create` (`user_id`, `status`, `gmt_create`),
     KEY `idx_gmt_modified` (`gmt_modified`),
     KEY `idx_gmt_create` (`gmt_create`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='聊天会话表 - 存储用户与AI助手的对话会话信息';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='聊天会话表 - 存储用户与AI助手的对话会话信息，支持Spring AI聊天记忆';
 
 -- =====================================================
--- 第四步：创建聊天消息表
+-- 聊天消息表（支持 Spring AI 聊天记忆）
 -- =====================================================
-
 CREATE TABLE IF NOT EXISTS `chat_messages` (
     `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键（自增）',
     `session_id` bigint(20) NOT NULL COMMENT '会话ID（关联chat_sessions表）',
+    `conversation_id` varchar(100) DEFAULT NULL COMMENT 'Spring AI 对话ID（冗余字段，便于查询）',
     `role` varchar(20) NOT NULL COMMENT '消息角色（user:用户；assistant:AI助手；system:系统）',
+    `message_type` varchar(20) DEFAULT NULL COMMENT 'Spring AI 消息类型（USER/ASSISTANT/SYSTEM/TOOL）',
     `content` text NOT NULL COMMENT '消息内容（用户问题或AI回答的完整文本）',
     `sources` json DEFAULT NULL COMMENT '知识来源（JSON格式，包含文档来源、相似度分数等信息）',
     `metadata` json DEFAULT NULL COMMENT '额外元数据（扩展信息，如模型版本、处理参数等）',
     `tokens_used` int(11) DEFAULT NULL COMMENT 'Token使用量（该条消息消耗的Token数量）',
     `response_time` int(11) DEFAULT NULL COMMENT '响应时间（AI回答的响应时间，单位：毫秒）',
     `rating` int(11) DEFAULT NULL COMMENT '用户评分（1-5分，用户对AI回答的满意度评价）',
+    `context_weight` decimal(3,2) NOT NULL DEFAULT '1.00' COMMENT '上下文权重（用于记忆重要性计算）',
+    `relevance_score` decimal(5,4) DEFAULT NULL COMMENT '相关性分数（用于记忆检索）',
+    `semantic_hash` varchar(64) DEFAULT NULL COMMENT '语义哈希值（用于相似消息检测）',
+    `timestamp` timestamp DEFAULT CURRENT_TIMESTAMP COMMENT 'Spring AI 标准时间戳',
     `deleted` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '0正常，1删除',
     `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
@@ -92,12 +104,18 @@ CREATE TABLE IF NOT EXISTS `chat_messages` (
     `modifier` varchar(64) NOT NULL DEFAULT 'system' COMMENT '修改人',
     PRIMARY KEY (`id`),
     KEY `idx_session_id` (`session_id`),
+    KEY `idx_conversation_id` (`conversation_id`),
+    KEY `idx_conversation_timestamp` (`conversation_id`, `timestamp`),
+    KEY `idx_session_role_create` (`session_id`, `role`, `gmt_create`),
+    KEY `idx_session_create_id` (`session_id`, `gmt_create`, `id`),
+    KEY `idx_message_type` (`message_type`),
     KEY `idx_gmt_create` (`gmt_create`),
     KEY `idx_role` (`role`),
     KEY `idx_rating` (`rating`),
+    KEY `idx_relevance_score` (`relevance_score`),
+    KEY `idx_semantic_hash` (`semantic_hash`),
     CONSTRAINT `fk_chat_messages_session_id` FOREIGN KEY (`session_id`) REFERENCES `chat_sessions` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='聊天消息表 - 存储会话中的具体消息内容和元数据信息';
-
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='聊天消息表 - 存储会话中的具体消息内容和元数据信息，支持Spring AI聊天记忆';
 -- =====================================================
 -- 第五步：创建文档管理表
 -- =====================================================
