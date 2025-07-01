@@ -17,7 +17,7 @@ public class SessionQueryRequest {
     /**
      * 用户ID（必填）
      */
-    @Schema(description = "用户ID", example = "user123", required = true)
+    @Schema(description = "用户ID", example = "user123")
     @NotBlank(message = "用户ID不能为空")
     private String userId;
 

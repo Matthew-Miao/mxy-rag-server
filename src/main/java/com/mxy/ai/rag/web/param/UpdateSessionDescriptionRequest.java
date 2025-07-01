@@ -18,14 +18,14 @@ public class UpdateSessionDescriptionRequest {
     /**
      * 会话ID
      */
-    @Schema(description = "会话ID", example = "1", required = true)
+    @Schema(description = "会话ID", example = "1")
     @NotNull(message = "会话ID不能为空")
     private Long sessionId;
 
     /**
      * 用户ID
      */
-    @Schema(description = "用户ID", example = "user123", required = true)
+    @Schema(description = "用户ID", example = "user123")
     @NotBlank(message = "用户ID不能为空")
     private String userId;
 

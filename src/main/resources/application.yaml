@@ -68,19 +68,10 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   mapper-locations: classpath*:/mapper/**/*.xml
 
-# Swagger/OpenAPI 配置
-springdoc:
-  api-docs:
-    enabled: true
-    path: /v3/api-docs
-  swagger-ui:
-    enabled: true
-    path: /swagger-ui.html
-    try-it-out-enabled: true
-    operations-sorter: alpha
-    tags-sorter: alpha
-  show-actuator: false
-  group-configs:
-    - group: 'default'
-      display-name: 'MXY RAG API'
-      paths-to-match: '/api/**'
+
+swagger:
+  title: MXY-RAG API接口文档
+  description: MXY-RAG API接口文档
+  authorName: MXY
+  licenseName: MXY
+  basePackage: com.mxy.ai.rag.web.controller

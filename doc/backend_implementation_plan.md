@@ -55,18 +55,87 @@
 
 #### 2.1 会话管理功能
 **Service层**：
-- `SessionService`：会话业务逻辑
+- `ChatSessionService`：会话业务逻辑
 - `MessageService`：消息业务逻辑
 
 **Controller接口**：
-- `POST /api/v1/sessions`：创建新会话
-- `GET /api/v1/sessions`：获取用户会话列表
-- `DELETE /api/v1/sessions/{sessionId}`：删除会话
-- `PUT /api/v1/sessions/{sessionId}/title`：更新会话标题
-- `GET /api/v1/sessions/search`：搜索会话
-- `GET /api/v1/sessions/{sessionId}/messages`：获取会话消息历史
+- `POST /api/v1/chat/sessions/create`：创建新会话
+  - 入参：`CreateSessionRequest` (title, description, userId)
+  - 出参：`ApiResult<SessionVO>`
+- `GET /api/v1/chat/sessions/detail/{sessionId}`：获取会话详情
+  - 入参：sessionId (路径参数), userId (查询参数)
+  - 出参：`ApiResult<SessionVO>`
+- `POST /api/v1/chat/sessions/list`：分页查询会话列表
+  - 入参：`SessionQueryRequest` (userId, keyword, status, pageNum, pageSize)
+  - 出参：`ApiResult<PageResult<SessionVO>>`
+- `POST /api/v1/chat/sessions/update-title`：更新会话标题
+  - 入参：`UpdateSessionTitleRequest` (sessionId, userId, title)
+  - 出参：`ApiResult<SessionVO>`
+- `POST /api/v1/chat/sessions/update-description`：更新会话描述
+  - 入参：`UpdateSessionDescriptionRequest` (sessionId, userId, description)
+  - 出参：`ApiResult<SessionVO>`
+- `POST /api/v1/chat/sessions/archive`：归档会话
+  - 入参：`ArchiveSessionRequest` (sessionId, userId)
+  - 出参：`ApiResult<Boolean>`
+- `POST /api/v1/chat/sessions/delete`：逻辑删除会话
+  - 入参：`DeleteSessionRequest` (sessionId, userId)
+  - 出参：`ApiResult<Boolean>`
+- `POST /api/v1/chat/sessions/restore`：恢复已删除会话
+  - 入参：`RestoreSessionRequest` (sessionId, userId)
+  - 出参：`ApiResult<Boolean>`
+- `GET /api/v1/chat/sessions/statistics/user`：获取用户会话统计
+  - 入参：userId (查询参数)
+  - 出参：`ApiResult<Object>`
 
-#### 2.2 智能对话功能
+#### 2.2 会话管理数据结构
+
+**请求参数对象**：
+- `CreateSessionRequest`：创建会话请求
+  - title (String, 可选)：会话标题，最大200字符
+  - description (String, 可选)：会话描述，最大500字符
+  - userId (String, 必填)：用户ID
+
+- `SessionQueryRequest`：查询会话列表请求
+  - userId (String, 必填)：用户ID
+  - keyword (String, 可选)：搜索关键词
+  - status (String, 可选)：会话状态 (active/archived/deleted)
+  - pageNum (Integer, 默认1)：页码
+  - pageSize (Integer, 默认20)：每页大小
+
+- `UpdateSessionTitleRequest`：更新会话标题请求
+  - sessionId (Long, 必填)：会话ID
+  - userId (String, 必填)：用户ID
+  - title (String, 必填)：新标题，最大200字符
+
+- `UpdateSessionDescriptionRequest`：更新会话描述请求
+  - sessionId (Long, 必填)：会话ID
+  - userId (String, 必填)：用户ID
+  - description (String, 可选)：新描述，最大500字符
+
+**响应对象**：
+- `SessionVO`：会话信息响应对象
+  - id (Long)：会话ID
+  - userId (String)：用户ID
+  - title (String)：会话标题
+  - description (String)：会话描述
+  - messageCount (Integer)：消息数量
+  - totalTokens (Integer)：Token总数
+  - status (String)：会话状态
+  - gmtCreate (LocalDateTime)：创建时间
+  - gmtModified (LocalDateTime)：修改时间
+  - lastMessage (String)：最后一条消息内容
+  - lastMessageTime (LocalDateTime)：最后一条消息时间
+
+- `PageResult<SessionVO>`：分页查询结果
+  - records (List<SessionVO>)：数据列表
+  - total (Long)：总记录数
+  - current (Long)：当前页码
+  - size (Long)：每页大小
+  - pages (Long)：总页数
+  - hasNext (Boolean)：是否有下一页
+  - hasPrevious (Boolean)：是否有上一页
+
+#### 2.3 智能对话功能
 **Service层**：
 - `ChatService`：对话业务逻辑
 - `RAGService`：检索增强生成服务
@@ -78,17 +147,22 @@
 - `GET /api/v1/chat/history/{sessionId}`：获取对话历史
 - `POST /api/v1/chat/feedback`：用户反馈接口
 
-#### 2.3 RAG核心流程
+#### 2.4 RAG核心流程
 - 知识库检索逻辑
 - 上下文构建算法
 - 提示词模板管理
 - 回答质量评估
 
 ### ✅ 交付物
-- 完整的会话管理功能
-- 基础的智能对话能力
-- RAG检索增强逻辑
-- 核心业务接口测试
+- ✅ **完整的会话管理功能**（已完成）
+  - 9个会话管理接口全部实现
+  - 完整的请求参数验证和响应对象
+  - 支持会话的CRUD操作、归档、恢复等功能
+  - 分页查询和关键词搜索功能
+  - 用户权限验证和数据隔离
+- 基础的智能对话能力（待开发）
+- RAG检索增强逻辑（待开发）
+- 核心业务接口测试（待完善）
 
 ---
 
