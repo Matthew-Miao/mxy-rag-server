@@ -1,9 +1,9 @@
 package com.mxy.ai.rag.web.param;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
 /**

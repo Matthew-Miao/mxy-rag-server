@@ -10,10 +10,10 @@ import com.mxy.ai.rag.dto.*;
 import com.mxy.ai.rag.web.vo.PageResult;
 import com.mxy.ai.rag.web.vo.SessionVO;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
  * @author Mxy
  */
 @Service
+@Slf4j
 public class ChatSessionServiceImpl implements ChatSessionService {
 
     private static final Logger logger = LoggerFactory.getLogger(ChatSessionServiceImpl.class);
@@ -224,7 +225,7 @@ public class ChatSessionServiceImpl implements ChatSessionService {
         sessionDO.setModifier(dto.getUserId());
         
         boolean updated = chatSessionsDAO.updateById(sessionDO);
-        logger.info("会话恢复{}: sessionId={}", updated ? "成功" : "失败", dto.getSessionId());}]}}}
+        logger.info("会话恢复{}: sessionId={}", updated ? "成功" : "失败", dto.getSessionId());
         
         return updated;
     }
