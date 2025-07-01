@@ -13,8 +13,9 @@ import org.springframework.ai.reader.tika.TikaDocumentReader;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+
+import javax.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.web.multipart.MultipartFile;
@@ -39,7 +40,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     private final VectorStore vectorStore;
     private final ChatClient chatClient;
 
-    @Autowired
+    @Resource
     public KnowledgeBaseServiceImpl(VectorStore vectorStore, @Qualifier("openAiChatModel")ChatModel chatModel) {
         this.vectorStore = vectorStore;
         this.chatClient = ChatClient.builder(chatModel)

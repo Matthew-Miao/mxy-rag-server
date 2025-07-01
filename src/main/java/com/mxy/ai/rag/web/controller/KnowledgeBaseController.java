@@ -1,8 +1,7 @@
-package com.mxy.ai.rag.controller;
+package com.mxy.ai.rag.web.controller;
 
 import com.mxy.ai.rag.service.KnowledgeBaseService;
 import org.springframework.ai.document.Document;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +26,6 @@ public class KnowledgeBaseController {
      *
      * @param knowledgeBaseService 知识库服务实例
      */
-    @Autowired
     public KnowledgeBaseController(KnowledgeBaseService knowledgeBaseService) {
         this.knowledgeBaseService = knowledgeBaseService;
     }
@@ -96,54 +94,54 @@ public class KnowledgeBaseController {
         }
     }
 
-    /**
-     * 阻塞式LLM对话接口，根据业务类型获取相关知识库数据进行问答。
-     *
-     * @param query 用户查询问题
-     * @param topK 检索的相关文档数量（默认为5）
-     * @return LLM生成的回答
-     */
-    @PostMapping("/chat")
-    public ResponseEntity<String> chatWithKnowledge(@RequestParam("query") String query,
-                                                   @RequestParam(value = "topK", defaultValue = "5") int topK) {
-        if (query == null || query.trim().isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("查询问题是必需的");
-        }
-
-        if (topK <= 0) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("topK必须是正整数");
-        }
-
-        try {
-            String answer = knowledgeBaseService.chatWithKnowledge(query, topK);
-            return ResponseEntity.ok(answer);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("对话过程中发生错误: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 流式LLM对话接口，根据业务类型获取相关知识库数据进行问答。
-     *
-     * @param query 用户查询问题
-     * @param topK 检索的相关文档数量（默认为5）
-     * @return 流式返回的LLM回答
-     */
-    @PostMapping(value = "/chat-stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public ResponseEntity<Flux<String>> chatWithKnowledgeStream(@RequestParam("query") String query,
-                                                               @RequestParam(value = "topK", defaultValue = "5") int topK) {
-        if (query == null || query.trim().isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Flux.just("查询问题是必需的"));
-        }
-        if (topK <= 0) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Flux.just("topK必须是正整数"));
-        }
-
-        try {
-            Flux<String> answerStream = knowledgeBaseService.chatWithKnowledgeStream(query,  topK);
-            return ResponseEntity.ok(answerStream);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Flux.just("流式对话过程中发生错误: " + e.getMessage()));
-        }
-    }
+//    /**
+//     * 阻塞式LLM对话接口，根据业务类型获取相关知识库数据进行问答。
+//     *
+//     * @param query 用户查询问题
+//     * @param topK 检索的相关文档数量（默认为5）
+//     * @return LLM生成的回答
+//     */
+//    @PostMapping("/chat")
+//    public ResponseEntity<String> chatWithKnowledge(@RequestParam("query") String query,
+//                                                   @RequestParam(value = "topK", defaultValue = "5") int topK) {
+//        if (query == null || query.trim().isEmpty()) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("查询问题是必需的");
+//        }
+//
+//        if (topK <= 0) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("topK必须是正整数");
+//        }
+//
+//        try {
+//            String answer = knowledgeBaseService.chatWithKnowledge(query, topK);
+//            return ResponseEntity.ok(answer);
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("对话过程中发生错误: " + e.getMessage());
+//        }
+//    }
+//
+//    /**
+//     * 流式LLM对话接口，根据业务类型获取相关知识库数据进行问答。
+//     *
+//     * @param query 用户查询问题
+//     * @param topK 检索的相关文档数量（默认为5）
+//     * @return 流式返回的LLM回答
+//     */
+//    @PostMapping(value = "/chat-stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+//    public ResponseEntity<Flux<String>> chatWithKnowledgeStream(@RequestParam("query") String query,
+//                                                               @RequestParam(value = "topK", defaultValue = "5") int topK) {
+//        if (query == null || query.trim().isEmpty()) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Flux.just("查询问题是必需的"));
+//        }
+//        if (topK <= 0) {
+//            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Flux.just("topK必须是正整数"));
+//        }
+//
+//        try {
+//            Flux<String> answerStream = knowledgeBaseService.chatWithKnowledgeStream(query,  topK);
+//            return ResponseEntity.ok(answerStream);
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Flux.just("流式对话过程中发生错误: " + e.getMessage()));
+//        }
+//    }
 }
