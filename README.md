@@ -388,7 +388,7 @@ mysql.password=your_password                   # MySQL密码
 
 ## 📚 相关文档
 
-- [产品需求文档 (PRD)](./doc/PRD.md) - 详细的产品设计和业务需求
+- [产品需求文档 (PRD)](./doc/prd.md) - 详细的产品设计和业务需求
 - [技术实现文档](./doc/technical_implementation.md) - 技术架构和实现细节
 - [PostgreSQL数据库初始化](./doc/init_database.sql) - 向量数据库初始化脚本
 - [MySQL数据库初始化](./doc/init_mysql_database.sql) - 业务数据库初始化脚本
@@ -422,4 +422,4 @@ mysql.password=your_password                   # MySQL密码
 
 **许可证**: Apache 2.0 License  
 **版本**: v1.0 MVP  
-**最后更新**: 2025年1月
+**最后更新**: 2025年6月
