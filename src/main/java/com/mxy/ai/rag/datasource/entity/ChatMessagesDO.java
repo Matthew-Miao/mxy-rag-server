@@ -6,11 +6,13 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.sql.Timestamp;
 
 /**
  * 聊天消息表实体类
- * 存储会话中的具体消息内容和元数据信息
+ * 存储会话中的具体消息内容和元数据信息，支持Spring AI聊天记忆
  */
 @TableName(value = "chat_messages")
 @Data
@@ -29,9 +31,19 @@ public class ChatMessagesDO implements Serializable {
     private Long sessionId;
 
     /**
+     * Spring AI 对话ID（冗余字段，便于查询）
+     */
+    private String conversationId;
+
+    /**
      * 消息角色（user:用户；assistant:AI助手；system:系统）
      */
     private String role;
+
+    /**
+     * Spring AI 消息类型（USER/ASSISTANT/SYSTEM/TOOL）
+     */
+    private String messageType;
 
     /**
      * 消息内容（用户问题或AI回答的完整文本）
@@ -62,6 +74,26 @@ public class ChatMessagesDO implements Serializable {
      * 用户评分（1-5分，用户对AI回答的满意度评价）
      */
     private Integer rating;
+
+    /**
+     * 上下文权重（用于记忆重要性计算）
+     */
+    private BigDecimal contextWeight;
+
+    /**
+     * 相关性分数（用于记忆检索）
+     */
+    private BigDecimal relevanceScore;
+
+    /**
+     * 语义哈希值（用于相似消息检测）
+     */
+    private String semanticHash;
+
+    /**
+     * Spring AI 标准时间戳
+     */
+    private Timestamp timestamp;
 
     /**
      * 0正常，1删除

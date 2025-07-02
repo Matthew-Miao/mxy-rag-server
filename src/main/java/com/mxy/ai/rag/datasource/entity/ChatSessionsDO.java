@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 /**
  * 聊天会话表实体类
- * 存储用户与AI助手的对话会话信息
+ * 存储用户与AI助手的对话会话信息，支持Spring AI聊天记忆
  */
 @TableName(value = "chat_sessions")
 @Data
@@ -27,6 +27,11 @@ public class ChatSessionsDO implements Serializable {
      * 用户标识（用户ID或会话标识）
      */
     private String userId;
+
+    /**
+     * Spring AI 对话ID（用于ChatMemoryRepository）
+     */
+    private String conversationId;
 
     /**
      * 会话标题（自动生成或用户自定义）
@@ -52,6 +57,26 @@ public class ChatSessionsDO implements Serializable {
      * 会话状态（active:活跃；archived:归档；deleted:已删除）
      */
     private String status;
+
+    /**
+     * 最大上下文消息数（记忆窗口大小）
+     */
+    private Integer maxContextMessages;
+
+    /**
+     * 上下文策略（sliding_window:滑动窗口；summary:摘要；hybrid:混合）
+     */
+    private String contextStrategy;
+
+    /**
+     * 记忆保留时间（小时，默认7天）
+     */
+    private Integer memoryRetentionHours;
+
+    /**
+     * 最后活动时间（用于记忆清理）
+     */
+    private LocalDateTime lastActivityTime;
 
     /**
      * 0正常，1删除

@@ -25,6 +25,11 @@ public class ChatAskDTO implements Serializable {
     private String userId;
 
     /**
+     * Spring AI 对话ID（可选）
+     */
+    private String conversationId;
+
+    /**
      * 用户问题
      */
     private String question;
@@ -48,4 +53,14 @@ public class ChatAskDTO implements Serializable {
      * 最大Token数量（默认2000）
      */
     private Integer maxTokens = 2000;
+
+    /**
+     * 是否启用聊天记忆（默认true）
+     */
+    private Boolean enableMemory = true;
+
+    /**
+     * 上下文权重（可选，用于消息重要性评分）
+     */
+    private java.math.BigDecimal contextWeight;
 }

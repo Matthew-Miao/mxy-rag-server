@@ -24,8 +24,14 @@ public class ChatMessageVO implements Serializable {
     @Schema(description = "会话ID", example = "1")
     private Long sessionId;
 
+    @Schema(description = "Spring AI 对话ID", example = "conv_123456")
+    private String conversationId;
+
     @Schema(description = "消息角色", example = "user")
     private String role;
+
+    @Schema(description = "Spring AI 消息类型", example = "USER")
+    private String messageType;
 
     @Schema(description = "消息内容", example = "你好，请问什么是人工智能？")
     private String content;
@@ -41,6 +47,18 @@ public class ChatMessageVO implements Serializable {
 
     @Schema(description = "用户评分（1-5分）", example = "5")
     private Integer rating;
+
+    @Schema(description = "上下文权重", example = "1.00")
+    private java.math.BigDecimal contextWeight;
+
+    @Schema(description = "相关性分数", example = "0.8500")
+    private java.math.BigDecimal relevanceScore;
+
+    @Schema(description = "语义哈希值", example = "abc123def456")
+    private String semanticHash;
+
+    @Schema(description = "Spring AI 时间戳", example = "2024-01-01T10:00:00.000Z")
+    private java.sql.Timestamp timestamp;
 
     @Schema(description = "创建时间", example = "2024-01-01T10:00:00")
     private LocalDateTime gmtCreate;

@@ -265,4 +265,115 @@ public class ChatSessionController {
             return ApiResult.error("获取会话统计信息失败: " + e.getMessage());
         }
     }
+
+    /**
+     * 根据conversationId获取会话详情
+     * 
+     * @param conversationId Spring AI对话ID
+     * @return 会话详情
+     */
+    @Operation(summary = "根据conversationId获取会话", description = "根据Spring AI对话ID获取会话的详细信息")
+    @GetMapping("/conversation/{conversationId}")
+    public ApiResult<SessionVO> getSessionByConversationId(
+            @Parameter(description = "Spring AI对话ID", required = true) @PathVariable String conversationId) {
+        try {
+            logger.info("根据conversationId获取会话详情: conversationId={}", conversationId);
+            SessionVO sessionVO = chatSessionService.getSessionByConversationId(conversationId);
+            return ApiResult.success(sessionVO);
+        } catch (Exception e) {
+            logger.error("根据conversationId获取会话详情失败: {}", e.getMessage(), e);
+            return ApiResult.error("获取会话详情失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 更新会话记忆配置
+     * 
+     * @param sessionId 会话ID
+     * @param maxContextMessages 最大上下文消息数
+     * @param contextStrategy 上下文策略
+     * @param memoryRetentionHours 记忆保留时间（小时）
+     * @return 更新结果
+     */
+    @Operation(summary = "更新会话记忆配置", description = "更新指定会话的Spring AI记忆配置")
+    @PostMapping("/memory-config/{sessionId}")
+    public ApiResult<Boolean> updateSessionMemoryConfig(
+            @Parameter(description = "会话ID", required = true) @PathVariable Long sessionId,
+            @Parameter(description = "最大上下文消息数") @RequestParam(required = false) Integer maxContextMessages,
+            @Parameter(description = "上下文策略") @RequestParam(required = false) String contextStrategy,
+            @Parameter(description = "记忆保留时间（小时）") @RequestParam(required = false) Integer memoryRetentionHours) {
+        try {
+            logger.info("更新会话记忆配置: sessionId={}, maxContextMessages={}, contextStrategy={}, memoryRetentionHours={}", 
+                    sessionId, maxContextMessages, contextStrategy, memoryRetentionHours);
+            
+            Boolean result = chatSessionService.updateSessionMemoryConfig(
+                    sessionId, maxContextMessages, contextStrategy, memoryRetentionHours);
+            return result ? ApiResult.success("记忆配置更新成功", result) : ApiResult.error("记忆配置更新失败");
+        } catch (Exception e) {
+            logger.error("更新会话记忆配置失败: {}", e.getMessage(), e);
+            return ApiResult.error("更新记忆配置失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取会话记忆配置
+     * 
+     * @param sessionId 会话ID
+     * @return 记忆配置信息
+     */
+    @Operation(summary = "获取会话记忆配置", description = "获取指定会话的Spring AI记忆配置")
+    @GetMapping("/memory-config/{sessionId}")
+    public ApiResult<Object> getSessionMemoryConfig(
+            @Parameter(description = "会话ID", required = true) @PathVariable Long sessionId) {
+        try {
+            logger.info("获取会话记忆配置: sessionId={}", sessionId);
+            
+            SessionVO sessionVO = chatSessionService.getSessionById(sessionId, null);
+            if (sessionVO == null) {
+                return ApiResult.error("会话不存在");
+            }
+            
+            java.util.Map<String, Object> memoryConfig = new java.util.HashMap<>();
+            memoryConfig.put("sessionId", sessionId);
+            memoryConfig.put("conversationId", sessionVO.getConversationId());
+            memoryConfig.put("maxContextMessages", sessionVO.getMaxContextMessages());
+            memoryConfig.put("contextStrategy", sessionVO.getContextStrategy());
+            memoryConfig.put("memoryRetentionHours", sessionVO.getMemoryRetentionHours());
+            memoryConfig.put("lastActivityTime", sessionVO.getLastActivityTime());
+            
+            return ApiResult.success("获取记忆配置成功", memoryConfig);
+        } catch (Exception e) {
+            logger.error("获取会话记忆配置失败: {}", e.getMessage(), e);
+            return ApiResult.error("获取记忆配置失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取会话记忆使用统计
+     * 
+     * @param userId 用户ID
+     * @return 记忆使用统计
+     */
+    @Operation(summary = "获取会话记忆使用统计", description = "获取用户的会话记忆使用统计信息")
+    @GetMapping("/memory/statistics/user")
+    public ApiResult<Object> getMemoryUsageStatistics(
+            @Parameter(description = "用户ID", required = true) @RequestParam String userId) {
+        try {
+            logger.info("获取会话记忆使用统计: userId={}", userId);
+            
+            // 获取用户的会话统计
+            Object sessionStats = chatSessionService.getSessionStatistics(userId);
+            
+            // 构建记忆使用统计
+            java.util.Map<String, Object> memoryStats = new java.util.HashMap<>();
+            memoryStats.put("userId", userId);
+            memoryStats.put("sessionStatistics", sessionStats);
+            memoryStats.put("statisticsTime", java.time.LocalDateTime.now());
+            
+            return ApiResult.success("获取记忆统计成功", memoryStats);
+        } catch (Exception e) {
+            logger.error("获取会话记忆使用统计失败: {}", e.getMessage(), e);
+            return ApiResult.error("获取记忆统计失败: " + e.getMessage());
+        }
+    }
 }

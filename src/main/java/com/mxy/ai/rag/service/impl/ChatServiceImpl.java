@@ -294,6 +294,15 @@ public class ChatServiceImpl implements ChatService {
         userMessage.setSessionId(dto.getSessionId());
         userMessage.setRole("user");
         userMessage.setContent(dto.getQuestion());
+        
+        // Spring AI 聊天记忆相关字段
+        userMessage.setConversationId(dto.getConversationId());
+        userMessage.setMessageType("USER");
+        userMessage.setContextWeight(dto.getContextWeight() != null ? dto.getContextWeight() : new java.math.BigDecimal("1.00"));
+        userMessage.setRelevanceScore(new java.math.BigDecimal("1.0000"));
+        userMessage.setSemanticHash(generateSemanticHash(dto.getQuestion()));
+        userMessage.setTimestamp(new java.sql.Timestamp(System.currentTimeMillis()));
+        
         userMessage.setDeleted(0);
         userMessage.setGmtCreate(LocalDateTime.now());
         userMessage.setGmtModified(LocalDateTime.now());
@@ -313,6 +322,15 @@ public class ChatServiceImpl implements ChatService {
         userMessage.setSessionId(dto.getSessionId());
         userMessage.setRole("user");
         userMessage.setContent(dto.getQuestion());
+        
+        // Spring AI 聊天记忆相关字段
+        userMessage.setConversationId(getConversationIdBySessionId(dto.getSessionId()));
+        userMessage.setMessageType("USER");
+        userMessage.setContextWeight(new java.math.BigDecimal("1.00"));
+        userMessage.setRelevanceScore(new java.math.BigDecimal("1.0000"));
+        userMessage.setSemanticHash(generateSemanticHash(dto.getQuestion()));
+        userMessage.setTimestamp(new java.sql.Timestamp(System.currentTimeMillis()));
+        
         userMessage.setDeleted(0);
         userMessage.setGmtCreate(LocalDateTime.now());
         userMessage.setGmtModified(LocalDateTime.now());
@@ -336,6 +354,15 @@ public class ChatServiceImpl implements ChatService {
         assistantMessage.setRole("assistant");
         assistantMessage.setContent(answer);
         assistantMessage.setResponseTime((int) responseTime);
+        
+        // Spring AI 聊天记忆相关字段
+        assistantMessage.setConversationId(dto.getConversationId());
+        assistantMessage.setMessageType("ASSISTANT");
+        assistantMessage.setContextWeight(new java.math.BigDecimal("1.00"));
+        assistantMessage.setRelevanceScore(calculateRelevanceScore(dto.getQuestion(), answer));
+        assistantMessage.setSemanticHash(generateSemanticHash(answer));
+        assistantMessage.setTimestamp(new java.sql.Timestamp(System.currentTimeMillis()));
+        
         assistantMessage.setDeleted(0);
         assistantMessage.setGmtCreate(LocalDateTime.now());
         assistantMessage.setGmtModified(LocalDateTime.now());
@@ -366,10 +393,42 @@ public class ChatServiceImpl implements ChatService {
             long messageCount = chatMessagesDAO.count(queryWrapper);
             
             session.setMessageCount((int) messageCount);
+            session.setLastActivityTime(LocalDateTime.now()); // 更新最后活动时间
             session.setGmtModified(LocalDateTime.now());
             
             chatSessionsDAO.updateById(session);
         }
+    }
+    
+    /**
+     * 根据会话ID获取对话ID
+     */
+    private String getConversationIdBySessionId(Long sessionId) {
+        ChatSessionsDO session = chatSessionsDAO.getById(sessionId);
+        return session != null ? session.getConversationId() : null;
+    }
+    
+    /**
+     * 生成语义哈希值（简化实现）
+     */
+    private String generateSemanticHash(String content) {
+        if (content == null || content.trim().isEmpty()) {
+            return "";
+        }
+        // 简化实现：使用内容的哈希值
+        return String.valueOf(content.hashCode());
+    }
+    
+    /**
+     * 计算相关性分数（简化实现）
+     */
+    private java.math.BigDecimal calculateRelevanceScore(String question, String answer) {
+        if (question == null || answer == null) {
+            return new java.math.BigDecimal("0.5000");
+        }
+        // 简化实现：基于长度比例计算相关性
+        double score = Math.min(1.0, (double) answer.length() / (question.length() + answer.length()));
+        return new java.math.BigDecimal(String.format("%.4f", score));
     }
 
     /**
@@ -381,6 +440,14 @@ public class ChatServiceImpl implements ChatService {
     private ChatMessageVO convertToVO(ChatMessagesDO messageDO) {
         ChatMessageVO vo = new ChatMessageVO();
         BeanUtils.copyProperties(messageDO, vo);
+        
+        // 手动设置Spring AI聊天记忆相关字段
+        vo.setConversationId(messageDO.getConversationId());
+        vo.setMessageType(messageDO.getMessageType());
+        vo.setContextWeight(messageDO.getContextWeight());
+        vo.setRelevanceScore(messageDO.getRelevanceScore());
+        vo.setSemanticHash(messageDO.getSemanticHash());
+        vo.setTimestamp(messageDO.getTimestamp());
         
         // 解析sources字段
         if (messageDO.getSources() != null && !messageDO.getSources().trim().isEmpty()) {

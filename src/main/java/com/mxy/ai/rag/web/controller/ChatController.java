@@ -40,6 +40,7 @@ public class ChatController {
     @Resource
     private ChatService chatService;
 
+
     /**
      * 智能问答（阻塞式）
      * 基于知识库进行问答，返回完整的回答结果

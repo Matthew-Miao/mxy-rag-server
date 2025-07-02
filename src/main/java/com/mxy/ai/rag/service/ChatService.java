@@ -65,4 +65,5 @@ public interface ChatService {
      * @return 消息列表
      */
     List<ChatMessageVO> getSessionMessages(Long sessionId, String userId);
+
 }

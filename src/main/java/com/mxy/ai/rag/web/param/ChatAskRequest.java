@@ -49,4 +49,24 @@ public class ChatAskRequest implements Serializable {
     @Min(value = 100, message = "最大Token数量不能小于100")
     @Max(value = 4000, message = "最大Token数量不能大于4000")
     private Integer maxTokens = 2000;
+    
+    /**
+     * Spring AI 对话ID（可选）
+     */
+    @Schema(description = "Spring AI 对话ID", example = "conv_123456")
+    private String conversationId;
+    
+    /**
+     * 是否启用记忆功能（可选，默认true）
+     */
+    @Schema(description = "是否启用记忆功能", example = "true")
+    private Boolean enableMemory = true;
+    
+    /**
+     * 上下文权重（可选，默认1.0）
+     */
+    @Schema(description = "上下文权重", example = "1.0")
+    @DecimalMin(value = "0.0", message = "上下文权重不能小于0.0")
+    @DecimalMax(value = "2.0", message = "上下文权重不能大于2.0")
+    private Double contextWeight = 1.0;
 }

@@ -73,4 +73,22 @@ public interface ChatSessionService {
      * @return 统计信息（总数、活跃数、归档数等）
      */
     Object getSessionStatistics(String userId);
+
+    /**
+     * 根据conversationId获取会话详情
+     * @param conversationId Spring AI对话ID
+     * @return 会话详情
+     */
+    SessionVO getSessionByConversationId(String conversationId);
+
+    /**
+     * 更新会话记忆配置
+     * @param sessionId 会话ID
+     * @param maxContextMessages 最大上下文消息数
+     * @param contextStrategy 上下文策略
+     * @param memoryRetentionHours 记忆保留时间（小时）
+     * @return 是否更新成功
+     */
+    Boolean updateSessionMemoryConfig(Long sessionId, Integer maxContextMessages, 
+                                    String contextStrategy, Integer memoryRetentionHours);
 }
