@@ -51,7 +51,6 @@ public interface KnowledgeBaseService {
      * @param topK 检索的相关文档数量
      * @return 流式返回的LLM回答
      */
-    Flux<String> chatWithKnowledgeStream(String query,  int topK);
-
+    Flux<String> chatWithKnowledgeStream(String query, String conversationId, int topK);
 
 }

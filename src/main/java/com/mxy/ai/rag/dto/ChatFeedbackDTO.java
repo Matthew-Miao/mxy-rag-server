@@ -20,17 +20,8 @@ public class ChatFeedbackDTO implements Serializable {
     private Long messageId;
 
     /**
-     * 用户ID
-     */
-    private String userId;
-
-    /**
      * 用户评分（1-5分）
      */
     private Integer rating;
 
-    /**
-     * 反馈内容（可选）
-     */
-    private String feedback;
 }

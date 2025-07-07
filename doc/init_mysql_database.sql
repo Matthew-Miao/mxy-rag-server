@@ -30,24 +30,22 @@ USE mxy_rag_db;
 CREATE TABLE IF NOT EXISTS `users` (
     `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键（自增）',
     `username` varchar(50) NOT NULL COMMENT '用户名（唯一标识）',
-    `last_login_at` datetime DEFAULT NULL COMMENT '最后登录时间',
+    `password` varchar(100) NOT NULL COMMENT '密码',
+    `user_id` varchar(50) NOT NULL COMMENT '用户ID',
     `deleted` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '0正常，1删除',
     `gmt_create` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
     `creator` varchar(64) NOT NULL DEFAULT 'system' COMMENT '创建人',
     `modifier` varchar(64) NOT NULL DEFAULT 'system' COMMENT '修改人',
     PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_username` (`username`),
-    UNIQUE KEY `uk_email` (`email`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表 - 存储系统用户的基本信息和认证数据';
+    UNIQUE KEY `uk_user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
 
 -- =====================================================
 -- 聊天会话表（支持 Spring AI 聊天记忆）
 -- =====================================================
 CREATE TABLE IF NOT EXISTS `chat_sessions` (
     `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键（自增）',
-    `user_id` varchar(50) NOT NULL COMMENT '用户标识（用户ID或会话标识）',
-    `conversation_id` varchar(100) DEFAULT NULL COMMENT 'Spring AI 对话ID（用于ChatMemoryRepository）',
     `title` varchar(200) NOT NULL COMMENT '会话标题（自动生成或用户自定义）',
     `description` text DEFAULT NULL COMMENT '会话描述（可选的会话备注信息）',
     `deleted` tinyint(1) unsigned NOT NULL DEFAULT '0' COMMENT '0正常，1删除',
@@ -55,12 +53,8 @@ CREATE TABLE IF NOT EXISTS `chat_sessions` (
     `gmt_modified` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',
     `creator` varchar(64) NOT NULL DEFAULT 'system' COMMENT '创建人',
     `modifier` varchar(64) NOT NULL DEFAULT 'system' COMMENT '修改人',
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_conversation_id` (`conversation_id`),
-    KEY `idx_user_id` (`user_id`),
-    KEY `idx_gmt_modified` (`gmt_modified`),
-    KEY `idx_gmt_create` (`gmt_create`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='聊天会话表 - 存储用户与AI助手的对话会话信息，支持Spring AI聊天记忆';
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='聊天会话表';
 
 -- =====================================================
 -- 聊天消息表（支持 Spring AI 聊天记忆）
@@ -80,13 +74,9 @@ CREATE TABLE IF NOT EXISTS `chat_messages` (
     PRIMARY KEY (`id`),
     KEY `idx_session_id` (`session_id`),
     KEY `idx_conversation_id` (`conversation_id`),
-    KEY `idx_session_message_type_create` (`session_id`, `message_type`, `gmt_create`),
-    KEY `idx_session_create_id` (`session_id`, `gmt_create`, `id`),
     KEY `idx_message_type` (`message_type`),
-    KEY `idx_gmt_create` (`gmt_create`),
-    KEY `idx_rating` (`rating`),
-    CONSTRAINT `fk_chat_messages_session_id` FOREIGN KEY (`session_id`) REFERENCES `chat_sessions` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='聊天消息表 - 存储会话中的具体消息内容和元数据信息，支持Spring AI聊天记忆';
+    KEY `idx_rating` (`rating`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='聊天消息表';
 
 -- =====================================================
 -- 脚本结束

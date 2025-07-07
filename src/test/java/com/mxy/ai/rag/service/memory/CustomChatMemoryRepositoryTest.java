@@ -55,14 +55,18 @@ class CustomChatMemoryRepositoryTest {
         mockSession.setId(1L);
         mockSession.setConversationId(conversationId);
         when(chatSessionsDAO.getOne(any())).thenReturn(mockSession);
+        
+        // Mock现有消息数量为0（首次保存）
+        when(chatMessagesDAO.lambdaQuery()).thenReturn(chatMessagesDAO.lambdaQuery());
+        when(chatMessagesDAO.count(any())).thenReturn(0L);
 
         // 执行测试
         assertDoesNotThrow(() -> repository.saveAll(conversationId, messages));
 
-        // 验证调用
-        verify(chatMessagesDAO, times(1)).update(any(), any()); // 删除现有消息
+        // 验证调用 - 新的逻辑只保存新消息，不删除现有消息
         verify(chatMessagesDAO, times(1)).saveBatch(any()); // 保存新消息
         verify(chatSessionsDAO, times(1)).update(any(), any()); // 更新会话活动
+        verify(chatMessagesDAO, never()).deleteMessagesByConversationId(any()); // 不应该删除现有消息
     }
 
     @Test
@@ -129,6 +133,9 @@ class CustomChatMemoryRepositoryTest {
         mockSession.setId(1L);
         mockSession.setConversationId(conversationId);
         when(chatSessionsDAO.getOne(any())).thenReturn(mockSession);
+        
+        // Mock现有消息数量为0
+        when(chatMessagesDAO.count(any())).thenReturn(0L);
 
         // 执行测试
         assertDoesNotThrow(() -> repository.saveAll(conversationId, messages));
@@ -141,5 +148,32 @@ class CustomChatMemoryRepositoryTest {
                 list.stream().anyMatch(msg -> "SYSTEM".equals(msg.getMessageType())) &&
                 list.stream().anyMatch(msg -> "TOOL".equals(msg.getMessageType()))
         ));
+    }
+
+    @Test
+    void testIncrementalSaveWithExistingMessages() {
+        // 测试增量保存功能
+        String conversationId = "test-conversation-123";
+        List<Message> newMessages = Arrays.asList(
+                new UserMessage("New user message"),
+                new AssistantMessage("New assistant message")
+        );
+
+        // Mock会话存在
+        ChatSessionsDO mockSession = new ChatSessionsDO();
+        mockSession.setId(1L);
+        mockSession.setConversationId(conversationId);
+        when(chatSessionsDAO.getOne(any())).thenReturn(mockSession);
+        
+        // Mock现有消息数量为3（模拟已有消息）
+        when(chatMessagesDAO.count(any())).thenReturn(3L);
+
+        // 执行测试
+        assertDoesNotThrow(() -> repository.saveAll(conversationId, newMessages));
+
+        // 验证只保存新消息，不删除现有消息
+        verify(chatMessagesDAO, times(1)).saveBatch(argThat(list -> list.size() == 2));
+        verify(chatMessagesDAO, never()).deleteMessagesByConversationId(any());
+        verify(chatSessionsDAO, times(1)).update(any(), any());
     }
 }

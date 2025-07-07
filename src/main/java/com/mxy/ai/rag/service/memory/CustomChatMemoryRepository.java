@@ -1,11 +1,7 @@
 package com.mxy.ai.rag.service.memory;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.mxy.ai.rag.datasource.dao.ChatMessagesDAO;
-import com.mxy.ai.rag.datasource.dao.ChatSessionsDAO;
 import com.mxy.ai.rag.datasource.entity.ChatMessagesDO;
-import com.mxy.ai.rag.datasource.entity.ChatSessionsDO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.messages.*;
@@ -33,8 +29,6 @@ public class CustomChatMemoryRepository implements ChatMemoryRepository {
 
     private static final Logger logger = LoggerFactory.getLogger(CustomChatMemoryRepository.class);
     private static final int DEFAULT_MAX_MESSAGES = 10;
-    @Resource
-    private ChatSessionsDAO chatSessionsDAO;
 
     @Resource
     private ChatMessagesDAO chatMessagesDAO;
@@ -49,15 +43,7 @@ public class CustomChatMemoryRepository implements ChatMemoryRepository {
         logger.debug("查找所有对话ID");
 
         try {
-            List<ChatSessionsDO> sessions = chatSessionsDAO.findConversationIds();
-            List<String> conversationIds = sessions.stream()
-                    .map(ChatSessionsDO::getConversationId)
-                    .filter(StringUtils::hasText)
-                    .collect(Collectors.toList());
-
-            logger.debug("找到{}个对话ID", conversationIds.size());
-            return conversationIds;
-
+            return chatMessagesDAO.findConversationIds();
         } catch (Exception e) {
             logger.error("查找对话ID失败", e);
             return Collections.emptyList();
@@ -91,10 +77,13 @@ public class CustomChatMemoryRepository implements ChatMemoryRepository {
 
     /**
      * 保存所有消息到指定对话
-     * 按照Spring AI标准实现：先删除现有消息，再保存新消息（事务性操作）
+     * 修正实现：正确实现MessageWindowChatMemory的语义
+     * - 保存当前窗口内的所有消息
+     * - 删除窗口外的旧消息（但保留系统消息）
+     * - 这样既保持了消息窗口管理，又避免了数据丢失
      *
      * @param conversationId 对话ID
-     * @param messages       消息列表
+     * @param messages       当前窗口内的消息列表
      */
     @Override
     @Transactional
@@ -103,29 +92,28 @@ public class CustomChatMemoryRepository implements ChatMemoryRepository {
         Assert.notNull(messages, "messages cannot be null");
         Assert.noNullElements(messages, "messages cannot contain null elements");
         
-        logger.debug("保存所有消息: conversationId={}, messageCount={}", conversationId, messages.size());
+        logger.debug("保存消息窗口: conversationId={}, windowSize={}", conversationId, messages.size());
 
         try {
-            // 确保会话存在
-            ChatSessionsDO session = ensureSessionExists(conversationId);
-            if (session == null) {
-                logger.warn("对话会话不存在，创建新会话: conversationId={}", conversationId);
-                throw new RuntimeException("对话会话不存在");
+            // 获取所有现有消息
+            List<Message> existingMessages = getMessagesByConversationId(conversationId, Integer.MAX_VALUE);
+            
+            // 找出需要保存的新消息
+            List<Message> newMessages = findNewMessages(existingMessages, messages);
+            
+            if (!newMessages.isEmpty()) {
+                // 保存新消息
+                saveMessagesWithTimestampSequence(conversationId, newMessages);
+                logger.debug("保存新增消息: conversationId={}, newMessageCount={}", conversationId, newMessages.size());
             }
             
-            // 按照Spring AI标准：先删除现有消息
-            deleteMessagesByConversationId(conversationId);
+            // 清理窗口外的旧消息（保留系统消息）
+            cleanupOldMessages(conversationId, messages);
             
-            // 保存新消息（带时间戳序列）
-            saveMessagesWithTimestampSequence(session.getId(), conversationId, messages);
-
-            // 更新会话信息
-            updateSessionActivity(session.getId(), messages.size());
-
-            logger.info("成功保存所有消息: conversationId={}, messageCount={}", conversationId, messages.size());
+            logger.info("成功更新消息窗口: conversationId={}, windowSize={}", conversationId, messages.size());
 
         } catch (Exception e) {
-            logger.error("保存所有消息失败: conversationId={}", conversationId, e);
+            logger.error("保存消息窗口失败: conversationId={}", conversationId, e);
             throw e;
         }
     }
@@ -144,14 +132,6 @@ public class CustomChatMemoryRepository implements ChatMemoryRepository {
         try {
             // 软删除消息
             deleteMessagesByConversationId(conversationId);
-
-            // 软删除会话
-            LambdaUpdateWrapper<ChatSessionsDO> sessionUpdateWrapper = new LambdaUpdateWrapper<>();
-            sessionUpdateWrapper.eq(ChatSessionsDO::getConversationId, conversationId)
-                    .set(ChatSessionsDO::getDeleted, 1)
-                    .set(ChatSessionsDO::getGmtModified, LocalDateTime.now());
-            chatSessionsDAO.update(null, sessionUpdateWrapper);
-
             logger.info("成功删除聊天记忆: conversationId={}", conversationId);
 
         } catch (Exception e) {
@@ -161,41 +141,17 @@ public class CustomChatMemoryRepository implements ChatMemoryRepository {
     }
 
     /**
-     * 根据对话ID获取会话信息
-     */
-    private ChatSessionsDO getSessionByConversationId(String conversationId) {
-        LambdaQueryWrapper<ChatSessionsDO> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(ChatSessionsDO::getConversationId, conversationId)
-                .eq(ChatSessionsDO::getDeleted, 0)
-                .last("LIMIT 1");
-        return chatSessionsDAO.getOne(queryWrapper);
-    }
-
-    /**
      * 根据对话ID获取消息列表
      * 按照Spring AI标准：按时间升序返回消息
      */
     private List<Message> getMessagesByConversationId(String conversationId, Integer maxMessages) {
-
-
         List<ChatMessagesDO> messageDOs = chatMessagesDAO.getMessagesByConversationId(conversationId, maxMessages);
 
         // 转换为Spring AI Message对象
         return messageDOs.stream()
-                .map(chatMessagesDO -> {
-                    Map<String, Object> metadata = new HashMap<>();;
-                    metadata.put("id", chatMessagesDO.getId());
-                    return convertToMessage(chatMessagesDO, metadata);
-                })
+                .map(this::convertToMessage)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-    }
-
-    /**
-     * 确保会话存在，如果不存在则创建
-     */
-    private ChatSessionsDO ensureSessionExists(String conversationId) {
-        return getSessionByConversationId(conversationId);
     }
 
 
@@ -203,23 +159,83 @@ public class CustomChatMemoryRepository implements ChatMemoryRepository {
      * 删除指定对话的所有消息（软删除）
      */
     private void deleteMessagesByConversationId(String conversationId) {
-        LambdaUpdateWrapper<ChatMessagesDO> messageUpdateWrapper = new LambdaUpdateWrapper<>();
-        messageUpdateWrapper.eq(ChatMessagesDO::getConversationId, conversationId)
-                .set(ChatMessagesDO::getDeleted, 1)
-                .set(ChatMessagesDO::getGmtModified, LocalDateTime.now());
-        chatMessagesDAO.update(null, messageUpdateWrapper);
+       chatMessagesDAO.deleteMessagesByConversationId(conversationId);
+    }
+
+    /**
+     * 找出需要保存的新消息
+     * 比较现有消息和当前窗口消息，找出新增的消息
+     */
+    private List<Message> findNewMessages(List<Message> existingMessages, List<Message> windowMessages) {
+        List<Message> newMessages = new ArrayList<>();
+        
+        // 如果窗口消息数量大于现有消息数量，说明有新消息
+        if (windowMessages.size() > existingMessages.size()) {
+            // 取出新增的消息（从现有消息数量开始到窗口消息结束）
+            newMessages = windowMessages.subList(existingMessages.size(), windowMessages.size());
+        }
+        
+        return newMessages;
+    }
+    
+    /**
+     * 清理窗口外的旧消息（保留系统消息）
+     * 根据MessageWindowChatMemory的语义，删除不在当前窗口内的旧消息，但保留系统消息
+     */
+    private void cleanupOldMessages(String conversationId, List<Message> windowMessages) {
+        try {
+            // 获取所有现有消息
+            List<ChatMessagesDO> allMessages = chatMessagesDAO.getMessagesByConversationId(conversationId, Integer.MAX_VALUE);
+            
+            // 如果现有消息数量小于等于窗口大小，无需清理
+            if (allMessages.size() <= windowMessages.size()) {
+                return;
+            }
+            
+            // 计算需要删除的消息数量（保留窗口大小的消息）
+            int messagesToDelete = allMessages.size() - windowMessages.size();
+            
+            // 找出最旧的非系统消息进行删除
+            List<Long> messageIdsToDelete = new ArrayList<>();
+            int deletedCount = 0;
+            
+            for (ChatMessagesDO messageDO : allMessages) {
+                // 跳过系统消息
+                if ("SYSTEM".equals(messageDO.getMessageType())) {
+                    continue;
+                }
+                
+                messageIdsToDelete.add(messageDO.getId());
+                deletedCount++;
+                
+                // 达到需要删除的数量就停止
+                if (deletedCount >= messagesToDelete) {
+                    break;
+                }
+            }
+            
+            // 执行删除
+            if (!messageIdsToDelete.isEmpty()) {
+                chatMessagesDAO.deleteMessagesByIds(messageIdsToDelete);
+                logger.debug("清理旧消息: conversationId={}, deletedCount={}", conversationId, messageIdsToDelete.size());
+            }
+            
+        } catch (Exception e) {
+            logger.warn("清理旧消息失败: conversationId={}", conversationId, e);
+            // 清理失败不影响主流程，只记录警告
+        }
     }
 
     /**
      * 保存消息列表（带时间戳序列，确保消息顺序）
      */
-    private void saveMessagesWithTimestampSequence(Long sessionId, String conversationId, List<Message> messages) {
+    private void saveMessagesWithTimestampSequence(String conversationId, List<Message> messages) {
         List<ChatMessagesDO> messageDOs = new ArrayList<>();
         long baseTimestamp = System.currentTimeMillis();
 
         for (int i = 0; i < messages.size(); i++) {
             Message message = messages.get(i);
-            ChatMessagesDO messageDO = convertToMessageDO(sessionId, conversationId, message, baseTimestamp + i);
+            ChatMessagesDO messageDO = convertToMessageDO(-1L, conversationId, message, baseTimestamp + i);
             if (messageDO != null) {
                 messageDOs.add(messageDO);
             }
@@ -232,20 +248,9 @@ public class CustomChatMemoryRepository implements ChatMemoryRepository {
     }
 
     /**
-     * 更新会话活动信息
-     */
-    private void updateSessionActivity(Long sessionId, int newMessageCount) {
-        LambdaUpdateWrapper<ChatSessionsDO> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.eq(ChatSessionsDO::getId, sessionId)
-                .set(ChatSessionsDO::getGmtModified, LocalDateTime.now());
-
-        chatSessionsDAO.update(null, updateWrapper);
-    }
-
-    /**
      * 将ChatMessagesDO转换为Spring AI Message
      */
-    private Message convertToMessage(ChatMessagesDO messageDO, Map<String, Object> metadata) {
+    private Message convertToMessage(ChatMessagesDO messageDO) {
         if (messageDO == null || !StringUtils.hasText(messageDO.getContent())) {
             return null;
         }
@@ -259,8 +264,8 @@ public class CustomChatMemoryRepository implements ChatMemoryRepository {
         // SYSTEM: 系统提示消息 -> SystemMessage
         // TOOL: 工具调用消息 -> ToolResponseMessage
         return switch (messageType.toUpperCase()) {
-            case "USER" -> UserMessage.builder().text(content).media(new ArrayList<>()).metadata(metadata).build();
-            case "ASSISTANT" -> new AssistantMessage(content, metadata);
+            case "USER" -> new UserMessage(content);
+            case "ASSISTANT" -> new AssistantMessage(content);
             case "SYSTEM" -> new SystemMessage(content);
             case "TOOL" -> new ToolResponseMessage(List.of()); // 按照Spring AI标准，内容为空
             default -> {
@@ -312,12 +317,5 @@ public class CustomChatMemoryRepository implements ChatMemoryRepository {
         }
 
         return messageDO;
-    }
-
-    /**
-     * 将Spring AI Message转换为ChatMessagesDO（兼容旧方法）
-     */
-    private ChatMessagesDO convertToMessageDO(Long sessionId, String conversationId, Message message) {
-        return convertToMessageDO(sessionId, conversationId, message, System.currentTimeMillis());
     }
 }

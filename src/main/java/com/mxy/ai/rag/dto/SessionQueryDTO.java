@@ -8,19 +8,6 @@ import lombok.Data;
  */
 @Data
 public class SessionQueryDTO {
-
-    /**
-     * 用户ID（必填）
-     */
-    private String userId;
-
-    /**
-     * 搜索关键词（可选，用于搜索会话标题或描述）
-     */
-    private String keyword;
-
-
-
     /**
      * 页码（从1开始）
      */

@@ -2,21 +2,8 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.mxy.ai.rag.datasource.mapper.ChatMessagesMapper">
 
-    <!-- 根据conversationId查询消息列表 -->
-    <select id="selectByConversationId" parameterType="string" resultType="com.mxy.ai.rag.datasource.entity.ChatMessagesDO">
-        SELECT * FROM chat_messages 
-        WHERE conversation_id = #{conversationId} 
-        AND deleted = 0
-        ORDER BY gmt_create ASC, id ASC
-    </select>
-
-    <!-- 根据conversationId和时间范围查询消息 -->
-    <select id="selectByConversationIdAndTimeRange" resultType="com.mxy.ai.rag.datasource.entity.ChatMessagesDO">
-        SELECT * FROM chat_messages 
-        WHERE conversation_id = #{conversationId}
-        AND deleted = 0
-        AND gmt_create BETWEEN #{startTime} AND #{endTime}
-        ORDER BY gmt_create ASC, id ASC
+    <select id="findConversationIds" resultType="java.lang.String">
+        SELECT DISTINCT conversation_id FROM chat_messages WHERE deleted = 0
     </select>
 
 </mapper>

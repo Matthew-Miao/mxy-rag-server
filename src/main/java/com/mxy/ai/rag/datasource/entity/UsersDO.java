@@ -28,12 +28,15 @@ public class UsersDO implements Serializable {
      */
     private String username;
 
-
+    /**
+     * 密码
+     */
+    private String password;
 
     /**
-     * 最后登录时间
+     * 用户唯一ID
      */
-    private LocalDateTime lastLoginAt;
+    private String userId;
 
     /**
      * 0正常，1删除

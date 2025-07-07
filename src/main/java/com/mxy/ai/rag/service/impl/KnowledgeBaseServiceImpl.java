@@ -1,6 +1,7 @@
 package com.mxy.ai.rag.service.impl;
 
 import com.mxy.ai.rag.service.KnowledgeBaseService;
+import jakarta.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -11,6 +12,9 @@ import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
+import org.springframework.ai.rag.preretrieval.query.transformation.CompressionQueryTransformer;
+import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
 import org.springframework.ai.reader.pdf.PagePdfDocumentReader;
 import org.springframework.ai.reader.tika.TikaDocumentReader;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
@@ -28,6 +32,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
 /**
@@ -42,11 +47,23 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     private final VectorStore vectorStore;
     private final ChatClient chatClient;
 
-    public KnowledgeBaseServiceImpl(VectorStore vectorStore, @Qualifier("openAiChatModel")ChatModel chatModel, MessageWindowChatMemory messageWindowChatMemory) {
+    @Resource
+    private Executor ttlTaskExecutor;
+
+    public KnowledgeBaseServiceImpl(VectorStore vectorStore, @Qualifier("openAiChatModel")ChatModel chatModel,
+                                    MessageWindowChatMemory messageWindowChatMemory) {
+        VectorStoreDocumentRetriever documentRetriever = VectorStoreDocumentRetriever.builder()
+                .vectorStore(vectorStore)
+                .similarityThreshold(0.50)
+                .topK(10)
+                .build();
+        RetrievalAugmentationAdvisor retrievalAugmentationAdvisor = RetrievalAugmentationAdvisor.builder()
+                .documentRetriever(documentRetriever)
+                .build();
         this.vectorStore = vectorStore;
         this.chatClient = ChatClient.builder(chatModel)
                 .defaultAdvisors(MessageChatMemoryAdvisor.builder(messageWindowChatMemory).build(),
-                        SimpleLoggerAdvisor.builder().build())
+                        SimpleLoggerAdvisor.builder().build(), retrievalAugmentationAdvisor)
                 .defaultOptions(OpenAiChatOptions.builder().temperature(0.7).build())
                 .build();
     }
@@ -148,23 +165,9 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     public String chatWithKnowledge(String query, String conversationId, int topK) {
         Assert.hasText(query, "查询问题不能为空");
         logger.info("开始知识库对话，查询: '{}'", query);
-
-        // 检索相关文档
-        List<Document> relevantDocs = similaritySearch(query, topK);
-
-        if (relevantDocs.isEmpty()) {
-            logger.warn("未找到与查询相关的文档");
-            return "抱歉，我在知识库中没有找到相关信息来回答您的问题。";
-        }
-
-        // 构建上下文
-        String context = relevantDocs.stream().map(Document::getText).collect(Collectors.joining("\n\n"));
-
-        // 构建提示词
-        String prompt = String.format("基于以下知识库内容回答用户问题。如果知识库内容无法回答问题，请明确说明。\n\n" + "知识库内容：\n%s\n\n" + "用户问题：%s\n\n" + "请基于上述知识库内容给出准确、有用的回答：", context, query);
-
         // 调用LLM生成回答
-        String answer = chatClient.prompt(prompt)
+        String answer = chatClient.prompt()
+                .user(query)
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
                 .call().content();
 
@@ -176,27 +179,17 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
      * {@inheritDoc}
      */
     @Override
-    public Flux<String> chatWithKnowledgeStream(String query, int topK) {
+    public Flux<String> chatWithKnowledgeStream(String query,String conversationId, int topK) {
         Assert.hasText(query, "查询问题不能为空");
         logger.info("开始流式知识库对话，查询: '{}'", query);
 
         try {
-            // 检索相关文档
-            List<Document> relevantDocs = similaritySearch(query, topK);
-
-            if (relevantDocs.isEmpty()) {
-                logger.warn("未找到与查询相关的文档");
-                return Flux.just("抱歉，我在知识库中没有找到相关信息来回答您的问题。");
-            }
-
-            // 构建上下文
-            String context = relevantDocs.stream().map(Document::getText).collect(Collectors.joining("\n\n"));
-
-            // 构建提示词
-            String prompt = String.format("基于以下知识库内容回答用户问题。如果知识库内容无法回答问题，请明确说明。\n\n" + "知识库内容：\n%s\n\n" + "用户问题：%s\n\n" + "请基于上述知识库内容给出准确、有用的回答：", context, query);
-
             // 调用LLM生成流式回答
-            return chatClient.prompt(prompt).stream().content();
+            return chatClient.prompt()
+                    .user(query)
+                    .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
+                    .stream()
+                    .content();
 
         } catch (Exception e) {
             logger.error("流式知识库对话失败，查询: '{}'", query, e);

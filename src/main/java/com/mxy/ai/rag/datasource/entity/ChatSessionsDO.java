@@ -3,7 +3,10 @@ package com.mxy.ai.rag.datasource.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -14,6 +17,9 @@ import java.time.LocalDateTime;
  */
 @TableName(value = "chat_sessions")
 @Data
+@SuperBuilder
+@AllArgsConstructor
+@NoArgsConstructor
 public class ChatSessionsDO implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -22,17 +28,6 @@ public class ChatSessionsDO implements Serializable {
      */
     @TableId(value = "id", type = IdType.AUTO)
     private Long id;
-
-    /**
-     * 用户标识（用户ID或会话标识）
-     */
-    private String userId;
-
-    /**
-     * Spring AI 对话ID（用于ChatMemoryRepository）
-     */
-    private String conversationId;
-
     /**
      * 会话标题（自动生成或用户自定义）
      */

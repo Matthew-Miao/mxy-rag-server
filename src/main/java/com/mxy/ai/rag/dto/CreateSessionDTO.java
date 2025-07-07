@@ -14,20 +14,4 @@ public class CreateSessionDTO {
      */
     private String title;
 
-    /**
-     * 会话描述（可选）
-     */
-    private String description;
-
-    /**
-     * 用户ID（必填）
-     */
-    private String userId;
-
-    /**
-     * Spring AI 对话ID（可选，如果不提供将自动生成）
-     */
-    private String conversationId;
-
-
 }

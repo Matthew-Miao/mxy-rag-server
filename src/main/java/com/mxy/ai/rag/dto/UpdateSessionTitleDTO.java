@@ -15,11 +15,6 @@ public class UpdateSessionTitleDTO {
     private Long sessionId;
 
     /**
-     * 用户ID
-     */
-    private String userId;
-
-    /**
      * 新的会话标题
      */
     private String title;
