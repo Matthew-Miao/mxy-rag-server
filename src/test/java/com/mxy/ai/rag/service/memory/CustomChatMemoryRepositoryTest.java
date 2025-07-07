@@ -53,7 +53,6 @@ class CustomChatMemoryRepositoryTest {
         // Mock会话存在
         ChatSessionsDO mockSession = new ChatSessionsDO();
         mockSession.setId(1L);
-        mockSession.setConversationId(conversationId);
         when(chatSessionsDAO.getOne(any())).thenReturn(mockSession);
         
         // Mock现有消息数量为0（首次保存）
@@ -131,7 +130,6 @@ class CustomChatMemoryRepositoryTest {
         // Mock会话存在
         ChatSessionsDO mockSession = new ChatSessionsDO();
         mockSession.setId(1L);
-        mockSession.setConversationId(conversationId);
         when(chatSessionsDAO.getOne(any())).thenReturn(mockSession);
         
         // Mock现有消息数量为0
@@ -162,7 +160,6 @@ class CustomChatMemoryRepositoryTest {
         // Mock会话存在
         ChatSessionsDO mockSession = new ChatSessionsDO();
         mockSession.setId(1L);
-        mockSession.setConversationId(conversationId);
         when(chatSessionsDAO.getOne(any())).thenReturn(mockSession);
         
         // Mock现有消息数量为3（模拟已有消息）
