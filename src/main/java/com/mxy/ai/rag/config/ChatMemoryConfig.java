@@ -18,7 +18,7 @@ import jakarta.annotation.Resource;
  */
 @Configuration
 public class ChatMemoryConfig {
-
+    private static final int DEFAULT_MAX_MESSAGES = 10;
     @Resource
     private CustomChatMemoryRepository customChatMemoryRepository;
 
@@ -36,9 +36,9 @@ public class ChatMemoryConfig {
 
     @Bean
     @Primary
-    public ChatMemory chatMemory() {
+    public MessageWindowChatMemory chatMemory() {
        return MessageWindowChatMemory.builder()
                 .chatMemoryRepository(customChatMemoryRepository)
-                .maxMessages(10).build();
+                .maxMessages(DEFAULT_MAX_MESSAGES).build();
     }
 }

@@ -43,47 +43,7 @@ public class SessionVO {
     @Schema(description = "会话描述", example = "这是一个关于技术讨论的会话")
     private String description;
 
-    /**
-     * 消息数量
-     */
-    @Schema(description = "消息数量", example = "10")
-    private Integer messageCount;
 
-    /**
-     * Token总数
-     */
-    @Schema(description = "Token总数", example = "1500")
-    private Integer totalTokens;
-
-    /**
-     * 会话状态
-     */
-    @Schema(description = "会话状态", example = "active", allowableValues = {"active", "archived", "deleted"})
-    private String status;
-
-    /**
-     * 最大上下文消息数
-     */
-    @Schema(description = "最大上下文消息数", example = "20")
-    private Integer maxContextMessages;
-
-    /**
-     * 上下文策略
-     */
-    @Schema(description = "上下文策略", example = "sliding_window", allowableValues = {"sliding_window", "summary", "hybrid"})
-    private String contextStrategy;
-
-    /**
-     * 记忆保留时间（小时）
-     */
-    @Schema(description = "记忆保留时间（小时）", example = "168")
-    private Integer memoryRetentionHours;
-
-    /**
-     * 最后活动时间
-     */
-    @Schema(description = "最后活动时间", example = "2024-01-01T11:45:00")
-    private LocalDateTime lastActivityTime;
 
     /**
      * 创建时间

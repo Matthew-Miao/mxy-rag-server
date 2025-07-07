@@ -7,7 +7,7 @@
         SELECT * FROM chat_messages 
         WHERE conversation_id = #{conversationId} 
         AND deleted = 0
-        ORDER BY timestamp ASC, id ASC
+        ORDER BY gmt_create ASC, id ASC
     </select>
 
     <!-- 根据conversationId和时间范围查询消息 -->
@@ -15,47 +15,8 @@
         SELECT * FROM chat_messages 
         WHERE conversation_id = #{conversationId}
         AND deleted = 0
-        AND timestamp BETWEEN #{startTime} AND #{endTime}
-        ORDER BY timestamp ASC, id ASC
-    </select>
-
-    <!-- 根据语义哈希查询相似消息 -->
-    <select id="selectBySimilarSemanticHash" resultType="com.mxy.ai.rag.datasource.entity.ChatMessagesDO">
-        SELECT * FROM chat_messages 
-        WHERE semantic_hash = #{semanticHash}
-        AND deleted = 0
-        ORDER BY relevance_score DESC, timestamp DESC
-        LIMIT #{limit}
-    </select>
-
-    <!-- 更新消息的相关性分数 -->
-    <update id="updateRelevanceScore">
-        UPDATE chat_messages 
-        SET relevance_score = #{relevanceScore},
-            gmt_modified = NOW()
-        WHERE id = #{messageId}
-        AND deleted = 0
-    </update>
-
-    <!-- 批量删除过期消息 -->
-    <update id="batchDeleteBySessionIds">
-        UPDATE chat_messages 
-        SET deleted = 1,
-            gmt_modified = NOW()
-        WHERE session_id IN
-        <foreach collection="sessionIds" item="sessionId" open="(" separator="," close=")">
-            #{sessionId}
-        </foreach>
-        AND deleted = 0
-    </update>
-
-    <!-- 根据上下文权重排序查询消息 -->
-    <select id="selectByConversationIdOrderByContextWeight" resultType="com.mxy.ai.rag.datasource.entity.ChatMessagesDO">
-        SELECT * FROM chat_messages 
-        WHERE conversation_id = #{conversationId}
-        AND deleted = 0
-        ORDER BY context_weight DESC, relevance_score DESC, timestamp DESC
-        LIMIT #{limit}
+        AND gmt_create BETWEEN #{startTime} AND #{endTime}
+        ORDER BY gmt_create ASC, id ASC
     </select>
 
 </mapper>

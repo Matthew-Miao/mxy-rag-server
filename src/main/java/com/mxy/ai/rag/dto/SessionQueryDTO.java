@@ -19,10 +19,7 @@ public class SessionQueryDTO {
      */
     private String keyword;
 
-    /**
-     * 会话状态过滤（可选：active、archived、deleted）
-     */
-    private String status;
+
 
     /**
      * 页码（从1开始）

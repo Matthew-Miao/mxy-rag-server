@@ -6,9 +6,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.sql.Timestamp;
+
 
 /**
  * 聊天消息表实体类
@@ -36,12 +35,11 @@ public class ChatMessagesDO implements Serializable {
     private String conversationId;
 
     /**
-     * 消息角色（user:用户；assistant:AI助手；system:系统）
-     */
-    private String role;
-
-    /**
-     * Spring AI 消息类型（USER/ASSISTANT/SYSTEM/TOOL）
+     * Spring AI 消息类型
+     * USER: 用户输入消息
+     * ASSISTANT: AI助手回复消息
+     * SYSTEM: 系统提示消息
+     * TOOL: 工具调用消息
      */
     private String messageType;
 
@@ -51,49 +49,11 @@ public class ChatMessagesDO implements Serializable {
     private String content;
 
     /**
-     * 知识来源（JSON格式，包含文档来源、相似度分数等信息）
-     */
-    private String sources;
-
-    /**
-     * 额外元数据（扩展信息，如模型版本、处理参数等）
-     */
-    private String metadata;
-
-    /**
-     * Token使用量（该条消息消耗的Token数量）
-     */
-    private Integer tokensUsed;
-
-    /**
-     * 响应时间（AI回答的响应时间，单位：毫秒）
-     */
-    private Integer responseTime;
-
-    /**
      * 用户评分（1-5分，用户对AI回答的满意度评价）
      */
     private Integer rating;
 
-    /**
-     * 上下文权重（用于记忆重要性计算）
-     */
-    private BigDecimal contextWeight;
 
-    /**
-     * 相关性分数（用于记忆检索）
-     */
-    private BigDecimal relevanceScore;
-
-    /**
-     * 语义哈希值（用于相似消息检测）
-     */
-    private String semanticHash;
-
-    /**
-     * Spring AI 标准时间戳
-     */
-    private Timestamp timestamp;
 
     /**
      * 0正常，1删除

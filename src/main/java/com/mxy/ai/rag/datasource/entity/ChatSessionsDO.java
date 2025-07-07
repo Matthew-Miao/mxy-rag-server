@@ -42,42 +42,6 @@ public class ChatSessionsDO implements Serializable {
      * 会话描述（可选的会话备注信息）
      */
     private String description;
-
-    /**
-     * 消息数量（该会话中的消息总数）
-     */
-    private Integer messageCount;
-
-    /**
-     * Token总数（该会话消耗的总Token数）
-     */
-    private Integer totalTokens;
-
-    /**
-     * 会话状态（active:活跃；archived:归档；deleted:已删除）
-     */
-    private String status;
-
-    /**
-     * 最大上下文消息数（记忆窗口大小）
-     */
-    private Integer maxContextMessages;
-
-    /**
-     * 上下文策略（sliding_window:滑动窗口；summary:摘要；hybrid:混合）
-     */
-    private String contextStrategy;
-
-    /**
-     * 记忆保留时间（小时，默认7天）
-     */
-    private Integer memoryRetentionHours;
-
-    /**
-     * 最后活动时间（用于记忆清理）
-     */
-    private LocalDateTime lastActivityTime;
-
     /**
      * 0正常，1删除
      */

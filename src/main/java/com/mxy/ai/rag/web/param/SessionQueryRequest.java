@@ -27,11 +27,7 @@ public class SessionQueryRequest {
     @Schema(description = "搜索关键词", example = "技术讨论")
     private String keyword;
 
-    /**
-     * 会话状态过滤（可选：active、archived、deleted）
-     */
-    @Schema(description = "会话状态", example = "active", allowableValues = {"active", "archived", "deleted"})
-    private String status;
+
 
     /**
      * 页码（从1开始）

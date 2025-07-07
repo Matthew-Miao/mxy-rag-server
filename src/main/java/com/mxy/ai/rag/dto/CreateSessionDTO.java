@@ -29,18 +29,5 @@ public class CreateSessionDTO {
      */
     private String conversationId;
 
-    /**
-     * 最大上下文消息数（可选，默认20）
-     */
-    private Integer maxContextMessages;
 
-    /**
-     * 上下文策略（可选，默认sliding_window）
-     */
-    private String contextStrategy;
-
-    /**
-     * 记忆保留时间（小时）（可选，默认168小时即7天）
-     */
-    private Integer memoryRetentionHours;
 }

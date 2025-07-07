@@ -28,35 +28,7 @@ public class UsersDO implements Serializable {
      */
     private String username;
 
-    /**
-     * 邮箱地址（可选）
-     */
-    private String email;
 
-    /**
-     * 密码哈希值（BCrypt加密）
-     */
-    private String passwordHash;
-
-    /**
-     * 显示名称（用户昵称）
-     */
-    private String displayName;
-
-    /**
-     * 头像URL地址
-     */
-    private String avatarUrl;
-
-    /**
-     * 用户角色（admin:管理员；user:普通用户）
-     */
-    private String role;
-
-    /**
-     * 用户状态（active:活跃；inactive:非活跃；banned:禁用）
-     */
-    private String status;
 
     /**
      * 最后登录时间

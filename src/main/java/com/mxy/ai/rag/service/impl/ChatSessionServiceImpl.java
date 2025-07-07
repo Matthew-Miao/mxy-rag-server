@@ -52,18 +52,12 @@ public class ChatSessionServiceImpl implements ChatSessionService {
         // Spring AI 聊天记忆相关字段
         sessionDO.setConversationId(StringUtils.hasText(dto.getConversationId()) ? 
                 dto.getConversationId() : generateConversationId(dto.getUserId()));
-        sessionDO.setMaxContextMessages(dto.getMaxContextMessages() != null ? 
-                dto.getMaxContextMessages() : 20);
-        sessionDO.setContextStrategy(StringUtils.hasText(dto.getContextStrategy()) ? 
-                dto.getContextStrategy() : "sliding_window");
-        sessionDO.setMemoryRetentionHours(dto.getMemoryRetentionHours() != null ? 
-                dto.getMemoryRetentionHours() : 168); // 默认7天
-        sessionDO.setLastActivityTime(LocalDateTime.now());
-        
-        // 基础字段
-        sessionDO.setMessageCount(0);
-        sessionDO.setTotalTokens(0);
-        sessionDO.setStatus("active");
+        // 设置基本字段
+        sessionDO.setDeleted(0);
+        sessionDO.setGmtCreate(LocalDateTime.now());
+        sessionDO.setGmtModified(LocalDateTime.now());
+        sessionDO.setCreator("system");
+        sessionDO.setModifier("system");
         sessionDO.setDeleted(0);
         sessionDO.setGmtCreate(LocalDateTime.now());
         sessionDO.setGmtModified(LocalDateTime.now());
@@ -110,18 +104,13 @@ public class ChatSessionServiceImpl implements ChatSessionService {
     public PageResult<SessionVO> getSessionList(SessionQueryDTO dto) {
         Assert.hasText(dto.getUserId(), "用户ID不能为空");
         
-        logger.info("查询会话列表: userId={}, keyword={}, status={}, pageNum={}, pageSize={}", 
-                dto.getUserId(), dto.getKeyword(), dto.getStatus(), 
+        logger.info("查询会话列表: userId={}, keyword={}, pageNum={}, pageSize={}", 
+                dto.getUserId(), dto.getKeyword(), 
                 dto.getPageNum(), dto.getPageSize());
         
         LambdaQueryWrapper<ChatSessionsDO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ChatSessionsDO::getUserId, dto.getUserId())
                 .eq(ChatSessionsDO::getDeleted, false);
-        
-        // 状态过滤
-        if (StringUtils.hasText(dto.getStatus())) {
-            queryWrapper.eq(ChatSessionsDO::getStatus, dto.getStatus());
-        }
         
         // 关键词搜索
         if (StringUtils.hasText(dto.getKeyword())) {
@@ -197,7 +186,6 @@ public class ChatSessionServiceImpl implements ChatSessionService {
         logger.info("归档会话: sessionId={}, userId={}", dto.getSessionId(), dto.getUserId());
         
         ChatSessionsDO sessionDO = getAndValidateSession(dto.getSessionId(), dto.getUserId());
-        sessionDO.setStatus("archived");
         sessionDO.setGmtModified(LocalDateTime.now());
         sessionDO.setModifier(dto.getUserId());
         
@@ -242,7 +230,6 @@ public class ChatSessionServiceImpl implements ChatSessionService {
         }
         
         sessionDO.setDeleted(0);
-        sessionDO.setStatus("active");
         sessionDO.setGmtModified(LocalDateTime.now());
         sessionDO.setModifier(dto.getUserId());
         
@@ -259,22 +246,11 @@ public class ChatSessionServiceImpl implements ChatSessionService {
         logger.info("获取会话统计信息: userId={}", userId);
         
         LambdaQueryWrapper<ChatSessionsDO> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(ChatSessionsDO::getUserId, userId);
-        
-        // 总数
-        Long totalCount = chatSessionsDAO.count(queryWrapper);
-        
-        // 活跃数
-        queryWrapper.eq(ChatSessionsDO::getStatus, "active")
-                .eq(ChatSessionsDO::getDeleted, false);
-        Long activeCount = chatSessionsDAO.count(queryWrapper);
-        
-        // 归档数
-        queryWrapper.clear();
         queryWrapper.eq(ChatSessionsDO::getUserId, userId)
-                .eq(ChatSessionsDO::getStatus, "archived")
                 .eq(ChatSessionsDO::getDeleted, false);
-        Long archivedCount = chatSessionsDAO.count(queryWrapper);
+        
+        // 活跃会话数（未删除的会话）
+        Long activeCount = chatSessionsDAO.count(queryWrapper);
         
         // 已删除数
         queryWrapper.clear();
@@ -282,10 +258,12 @@ public class ChatSessionServiceImpl implements ChatSessionService {
                 .eq(ChatSessionsDO::getDeleted, true);
         Long deletedCount = chatSessionsDAO.count(queryWrapper);
         
+        // 总数
+        Long totalCount = activeCount + deletedCount;
+        
         Map<String, Object> statistics = new HashMap<>();
         statistics.put("totalCount", totalCount);
         statistics.put("activeCount", activeCount);
-        statistics.put("archivedCount", archivedCount);
         statistics.put("deletedCount", deletedCount);
         
         logger.info("会话统计信息: {}", statistics);
@@ -311,37 +289,7 @@ public class ChatSessionServiceImpl implements ChatSessionService {
         return convertToVO(sessionDO);
     }
 
-    @Override
-    public Boolean updateSessionMemoryConfig(Long sessionId, Integer maxContextMessages, 
-                                           String contextStrategy, Integer memoryRetentionHours) {
-        Assert.notNull(sessionId, "会话ID不能为空");
-        
-        logger.info("更新会话记忆配置: sessionId={}, maxContextMessages={}, contextStrategy={}, memoryRetentionHours={}", 
-                   sessionId, maxContextMessages, contextStrategy, memoryRetentionHours);
-        
-        ChatSessionsDO sessionDO = chatSessionsDAO.getById(sessionId);
-        if (sessionDO == null) {
-            throw new RuntimeException("会话不存在");
-        }
-        
-        // 更新记忆配置
-        if (maxContextMessages != null) {
-            sessionDO.setMaxContextMessages(maxContextMessages);
-        }
-        if (contextStrategy != null) {
-            sessionDO.setContextStrategy(contextStrategy);
-        }
-        if (memoryRetentionHours != null) {
-            sessionDO.setMemoryRetentionHours(memoryRetentionHours);
-        }
-        
-        sessionDO.setGmtModified(LocalDateTime.now());
-        
-        boolean updated = chatSessionsDAO.updateById(sessionDO);
-        logger.info("会话记忆配置更新{}: sessionId={}", updated ? "成功" : "失败", sessionId);
-        
-        return updated;
-    }
+
 
     /**
      * 获取并验证会话权限
@@ -365,14 +313,6 @@ public class ChatSessionServiceImpl implements ChatSessionService {
     private SessionVO convertToVO(ChatSessionsDO sessionDO) {
         SessionVO sessionVO = new SessionVO();
         BeanUtils.copyProperties(sessionDO, sessionVO);
-        
-        // 手动设置Spring AI聊天记忆相关字段（确保字段名映射正确）
-        sessionVO.setConversationId(sessionDO.getConversationId());
-        sessionVO.setMaxContextMessages(sessionDO.getMaxContextMessages());
-        sessionVO.setContextStrategy(sessionDO.getContextStrategy());
-        sessionVO.setMemoryRetentionHours(sessionDO.getMemoryRetentionHours());
-        sessionVO.setLastActivityTime(sessionDO.getLastActivityTime());
-        
         return sessionVO;
     }
 }

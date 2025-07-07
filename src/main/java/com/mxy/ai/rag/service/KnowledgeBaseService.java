@@ -37,11 +37,12 @@ public interface KnowledgeBaseService {
     /**
      * 阻塞式LLM对话接口，根据业务类型获取相关知识库数据进行问答。
      *
-     * @param query 用户查询问题
-     * @param topK 检索的相关文档数量
+     * @param query          用户查询问题
+     * @param conversationId
+     * @param topK           检索的相关文档数量
      * @return LLM生成的回答
      */
-    String chatWithKnowledge(String query, int topK);
+    String chatWithKnowledge(String query, String conversationId, int topK);
 
     /**
      * 流式LLM对话接口，根据业务类型获取相关知识库数据进行问答。

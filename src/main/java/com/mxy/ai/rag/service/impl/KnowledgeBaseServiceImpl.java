@@ -4,7 +4,10 @@ import com.mxy.ai.rag.service.KnowledgeBaseService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
+import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.openai.OpenAiChatOptions;
@@ -39,10 +42,11 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     private final VectorStore vectorStore;
     private final ChatClient chatClient;
 
-    public KnowledgeBaseServiceImpl(VectorStore vectorStore, @Qualifier("openAiChatModel")ChatModel chatModel) {
+    public KnowledgeBaseServiceImpl(VectorStore vectorStore, @Qualifier("openAiChatModel")ChatModel chatModel, MessageWindowChatMemory messageWindowChatMemory) {
         this.vectorStore = vectorStore;
         this.chatClient = ChatClient.builder(chatModel)
-                .defaultAdvisors(new SimpleLoggerAdvisor())
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(messageWindowChatMemory).build(),
+                        SimpleLoggerAdvisor.builder().build())
                 .defaultOptions(OpenAiChatOptions.builder().temperature(0.7).build())
                 .build();
     }
@@ -141,7 +145,7 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
      * {@inheritDoc}
      */
     @Override
-    public String chatWithKnowledge(String query, int topK) {
+    public String chatWithKnowledge(String query, String conversationId, int topK) {
         Assert.hasText(query, "查询问题不能为空");
         logger.info("开始知识库对话，查询: '{}'", query);
 
@@ -160,7 +164,9 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         String prompt = String.format("基于以下知识库内容回答用户问题。如果知识库内容无法回答问题，请明确说明。\n\n" + "知识库内容：\n%s\n\n" + "用户问题：%s\n\n" + "请基于上述知识库内容给出准确、有用的回答：", context, query);
 
         // 调用LLM生成回答
-        String answer = chatClient.prompt(prompt).call().content();
+        String answer = chatClient.prompt(prompt)
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
+                .call().content();
 
         logger.info("知识库对话完成，查询: '{}'", query);
         return answer;

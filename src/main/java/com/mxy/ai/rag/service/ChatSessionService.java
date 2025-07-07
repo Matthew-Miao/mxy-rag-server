@@ -81,14 +81,5 @@ public interface ChatSessionService {
      */
     SessionVO getSessionByConversationId(String conversationId);
 
-    /**
-     * 更新会话记忆配置
-     * @param sessionId 会话ID
-     * @param maxContextMessages 最大上下文消息数
-     * @param contextStrategy 上下文策略
-     * @param memoryRetentionHours 记忆保留时间（小时）
-     * @return 是否更新成功
-     */
-    Boolean updateSessionMemoryConfig(Long sessionId, Integer maxContextMessages, 
-                                    String contextStrategy, Integer memoryRetentionHours);
+
 }

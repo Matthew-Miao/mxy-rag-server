@@ -41,21 +41,5 @@ public class CreateSessionRequest {
     @Schema(description = "Spring AI 对话ID", example = "conv_123456")
     private String conversationId;
     
-    /**
-     * 最大上下文消息数（可选，默认20）
-     */
-    @Schema(description = "最大上下文消息数", example = "20")
-    private Integer maxContextMessages = 20;
-    
-    /**
-     * 上下文策略（可选，默认sliding_window）
-     */
-    @Schema(description = "上下文策略", example = "sliding_window", allowableValues = {"sliding_window", "summary", "hybrid"})
-    private String contextStrategy = "sliding_window";
-    
-    /**
-     * 记忆保留时间（小时，可选，默认168小时即7天）
-     */
-    @Schema(description = "记忆保留时间（小时）", example = "168")
-    private Integer memoryRetentionHours = 168;
+
 }

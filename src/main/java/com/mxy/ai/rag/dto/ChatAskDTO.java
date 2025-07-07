@@ -3,6 +3,7 @@ package com.mxy.ai.rag.dto;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 /**
  * 智能问答请求数据传输对象
@@ -59,8 +60,5 @@ public class ChatAskDTO implements Serializable {
      */
     private Boolean enableMemory = true;
 
-    /**
-     * 上下文权重（可选，用于消息重要性评分）
-     */
-    private java.math.BigDecimal contextWeight;
+
 }

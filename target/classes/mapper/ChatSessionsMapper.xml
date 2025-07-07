@@ -10,36 +10,4 @@
         LIMIT 1
     </select>
 
-    <!-- 更新会话的最后活动时间 -->
-    <update id="updateLastActivityTime">
-        UPDATE chat_sessions 
-        SET last_activity_time = #{lastActivityTime},
-            gmt_modified = NOW()
-        WHERE id = #{sessionId}
-        AND deleted = 0
-    </update>
-
-    <!-- 查询过期的会话（超过记忆保留时间） -->
-    <select id="selectExpiredSessions" resultType="com.mxy.ai.rag.datasource.entity.ChatSessionsDO">
-        <![CDATA[
-        SELECT * FROM chat_sessions 
-        WHERE deleted = 0
-        AND status = 'active'
-        AND memory_retention_hours > 0
-        AND last_activity_time < DATE_SUB(NOW(), INTERVAL memory_retention_hours HOUR)
-        ]]>
-    </select>
-
-    <!-- 批量更新会话状态 -->
-    <update id="batchUpdateStatus">
-        UPDATE chat_sessions 
-        SET status = #{status},
-            gmt_modified = NOW()
-        WHERE id IN
-        <foreach collection="sessionIds" item="sessionId" open="(" separator="," close=")">
-            #{sessionId}
-        </foreach>
-        AND deleted = 0
-    </update>
-
 </mapper>
