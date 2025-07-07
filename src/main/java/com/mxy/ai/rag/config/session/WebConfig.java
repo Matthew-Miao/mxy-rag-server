@@ -65,7 +65,7 @@ public class WebConfig implements WebMvcConfigurer {
      */
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**")
+        registry.addMapping("/**")
                 // 允许所有来源（开发环境）
                 .allowedOriginPatterns("*")
                 // 允许的HTTP方法
