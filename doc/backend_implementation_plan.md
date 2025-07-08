@@ -4,318 +4,505 @@
 
 # 🚀 智能知识助手系统分阶段开发规划
 
-基于PRD文档和技术实现方案，结合RAG系统的特点，以下是完整的分阶段开发规划：
+基于PRD文档和技术实现方案，结合RAG系统的特点和当前已实现的接口情况，以下是完整的分阶段开发规划：
 
-## 📊 第一阶段：基础数据层搭建（1-2周）
+## 📋 当前接口实现状态
+
+### ✅ 已实现的Controller接口
+- **UserController** (`/api/v1/user`)
+  - `POST /register` - 用户注册
+  - `POST /login` - 用户登录
+  - `POST /change-password` - 修改密码
+  - `GET /info` - 获取用户信息
+  - `GET /check-username` - 检查用户名可用性
+
+- **ChatSessionController** (`/api/v1/chat/sessions`)
+  - `POST /create` - 创建会话
+  - `GET /detail/{sessionId}` - 获取会话详情
+  - `POST /list` - 分页查询会话列表
+  - `POST /update-title` - 更新会话标题
+
+- **ChatController** (`/api/v1/chat`)
+  - `POST /ask` - 智能问答（阻塞式）
+  - `POST /stream` - 流式智能问答
+  - `POST /getChatHistory` - 获取对话历史
+  - `POST /feedback` - 用户反馈
+
+- **KnowledgeBaseController** (`/api/v1/knowledge-base`)
+  - `POST /insert-text` - 插入文本内容
+  - `POST /upload-file` - 文件上传
+  - `GET /search` - 知识库搜索
+
+### 🔧 已实现的核心功能
+- 用户认证与权限管理（JWT + 拦截器）
+- 会话管理（创建、查询、更新）
+- 智能对话（同步/异步）
+- 知识库管理（文档上传、文本插入、搜索）
+- 分页查询和数据隔离
+- 全局异常处理和统一响应格式
+
+## 📊 第一阶段：后端功能完善与优化（1-2周）
 
 ### 🎯 目标
-建立完整的数据访问层，支持MySQL业务数据和PostgreSQL向量数据的混合访问
+基于已实现的接口，完善缺失功能，优化现有实现，确保系统稳定性
 
 ### 📋 核心任务
 
-#### 1.1 数据库设计与初始化
-- **MySQL业务数据库**：用户、会话、消息、文档元信息
-- **PostgreSQL向量数据库**：文档向量存储（Spring AI自动管理）
-- 执行数据库初始化脚本
+#### 1.1 会话管理功能补全
+- ✅ 已实现：创建会话、获取详情、分页查询、更新标题
+- 🔄 待补全：
+  - 会话删除/归档功能
+  - 会话统计信息
+  - 会话状态管理
+  - 批量操作接口
 
-#### 1.2 实体类（DO）设计
-- `User`：用户信息实体
-- `Session`：会话实体
-- `Message`：消息实体
-- `DocumentInfo`：文档元信息实体
-- `UserDocument`：用户文档关联实体
+#### 1.2 智能对话功能优化
+- ✅ 已实现：同步问答、流式问答、对话历史、用户反馈
+- 🔄 待优化：
+  - 对话上下文管理
+  - 消息类型扩展（支持图片、文件等）
+  - 对话质量评估
+  - 错误重试机制
 
-#### 1.3 数据访问层（DAO/Mapper）
-- `UserMapper`：用户数据操作
-- `SessionMapper`：会话数据操作
-- `MessageMapper`：消息数据操作
-- `DocumentInfoMapper`：文档元信息操作
-- `UserDocumentMapper`：用户文档关联操作
+#### 1.3 知识库管理增强
+- ✅ 已实现：文本插入、文件上传、知识搜索
+- 🔄 待增强：
+  - 文档管理接口（列表、删除、状态查询）
+  - 批量文档操作
+  - 文档处理状态跟踪
+  - 用户文档权限隔离
 
-#### 1.4 MyBatis配置
-- Mapper XML文件编写
-- 分页插件配置
-- 多数据源配置完善
-- 事务管理配置
+#### 1.4 系统监控与日志
+- 接口性能监控
+- 错误日志收集
+- 系统健康检查
+- 业务指标统计
 
 ### ✅ 交付物
-- 完整的数据库表结构
-- 所有实体类和Mapper接口
-- 数据访问层单元测试
-- 多数据源配置验证
+- 完善的会话管理功能
+- 优化的智能对话体验
+- 增强的知识库管理
+- 系统监控和日志体系
 
 ---
 
-## 🤖 第二阶段：核心业务功能搭建（2-3周）
+## 🎨 第二阶段：前端页面开发（2-3周）
 
 ### 🎯 目标
-实现智能对话和会话管理的核心功能，建立RAG工作流程
+基于原生HTML + CSS + JavaScript技术栈，开发完整的前端用户界面，实现与后端API的完整对接
 
 ### 📋 核心任务
 
-#### 2.1 会话管理功能
-**Service层**：
-- `ChatSessionService`：会话业务逻辑
-- `MessageService`：消息业务逻辑
+#### 2.1 项目结构搭建
+**目录结构**：
+```
+frontend/
+├── index.html              # 主页面
+├── login.html              # 登录页面
+├── register.html           # 注册页面
+├── css/
+│   ├── common.css          # 公共样式
+│   ├── login.css           # 登录样式
+│   ├── chat.css            # 聊天界面样式
+│   └── knowledge.css       # 知识库样式
+├── js/
+│   ├── common.js           # 公共工具函数
+│   ├── api.js              # API调用封装
+│   ├── auth.js             # 认证相关
+│   ├── chat.js             # 聊天功能
+│   ├── session.js          # 会话管理
+│   └── knowledge.js        # 知识库管理
+└── assets/
+    ├── icons/              # 图标文件
+    └── images/             # 图片资源
+```
 
-**Controller接口**：
-- `POST /api/v1/chat/sessions/create`：创建新会话
-  - 入参：`CreateSessionRequest` (title, description, userId)
-  - 出参：`ApiResult<SessionVO>`
-- `GET /api/v1/chat/sessions/detail/{sessionId}`：获取会话详情
-  - 入参：sessionId (路径参数), userId (查询参数)
-  - 出参：`ApiResult<SessionVO>`
-- `POST /api/v1/chat/sessions/list`：分页查询会话列表
-  - 入参：`SessionQueryRequest` (userId, keyword, status, pageNum, pageSize)
-  - 出参：`ApiResult<PageResult<SessionVO>>`
-- `POST /api/v1/chat/sessions/update-title`：更新会话标题
-  - 入参：`UpdateSessionTitleRequest` (sessionId, userId, title)
-  - 出参：`ApiResult<SessionVO>`
-- `POST /api/v1/chat/sessions/update-description`：更新会话描述
-  - 入参：`UpdateSessionDescriptionRequest` (sessionId, userId, description)
-  - 出参：`ApiResult<SessionVO>`
-- `POST /api/v1/chat/sessions/archive`：归档会话
-  - 入参：`ArchiveSessionRequest` (sessionId, userId)
-  - 出参：`ApiResult<Boolean>`
-- `POST /api/v1/chat/sessions/delete`：逻辑删除会话
-  - 入参：`DeleteSessionRequest` (sessionId, userId)
-  - 出参：`ApiResult<Boolean>`
-- `POST /api/v1/chat/sessions/restore`：恢复已删除会话
-  - 入参：`RestoreSessionRequest` (sessionId, userId)
-  - 出参：`ApiResult<Boolean>`
-- `GET /api/v1/chat/sessions/statistics/user`：获取用户会话统计
-  - 入参：userId (查询参数)
-  - 出参：`ApiResult<Object>`
+#### 2.2 用户认证模块
+**页面功能**：
+- **登录页面** (`login.html`)
+  - 用户名/密码登录表单
+  - 表单验证（前端校验）
+  - 登录状态保持（localStorage）
+  - 错误提示显示
+  - 跳转到注册页面链接
 
-#### 2.2 会话管理数据结构
+- **注册页面** (`register.html`)
+  - 用户注册表单（用户名、密码、确认密码）
+  - 实时用户名可用性检查
+  - 密码强度验证
+  - 注册成功后自动登录
 
-**请求参数对象**：
-- `CreateSessionRequest`：创建会话请求
-  - title (String, 可选)：会话标题，最大200字符
-  - description (String, 可选)：会话描述，最大500字符
-  - userId (String, 必填)：用户ID
+**API对接**：
+- `POST /api/v1/user/login` - 用户登录
+- `POST /api/v1/user/register` - 用户注册
+- `GET /api/v1/user/check-username` - 检查用户名
+- `GET /api/v1/user/info` - 获取用户信息
 
-- `SessionQueryRequest`：查询会话列表请求
-  - userId (String, 必填)：用户ID
-  - keyword (String, 可选)：搜索关键词
-  - status (String, 可选)：会话状态 (active/archived/deleted)
-  - pageNum (Integer, 默认1)：页码
-  - pageSize (Integer, 默认20)：每页大小
+#### 2.3 主界面布局
+**页面结构** (`index.html`)：
+- **顶部导航栏**
+  - 用户信息显示
+  - 退出登录按钮
+  - 系统设置入口
 
-- `UpdateSessionTitleRequest`：更新会话标题请求
-  - sessionId (Long, 必填)：会话ID
-  - userId (String, 必填)：用户ID
-  - title (String, 必填)：新标题，最大200字符
+- **左侧边栏**
+  - 会话列表
+  - 新建会话按钮
+  - 会话搜索框
+  - 知识库管理入口
 
-- `UpdateSessionDescriptionRequest`：更新会话描述请求
-  - sessionId (Long, 必填)：会话ID
-  - userId (String, 必填)：用户ID
-  - description (String, 可选)：新描述，最大500字符
+- **主聊天区域**
+  - 消息显示区域
+  - 消息输入框
+  - 发送按钮
+  - 文件上传按钮
 
-**响应对象**：
-- `SessionVO`：会话信息响应对象
-  - id (Long)：会话ID
-  - userId (String)：用户ID
-  - title (String)：会话标题
-  - description (String)：会话描述
-  - messageCount (Integer)：消息数量
-  - totalTokens (Integer)：Token总数
-  - status (String)：会话状态
-  - gmtCreate (LocalDateTime)：创建时间
-  - gmtModified (LocalDateTime)：修改时间
-  - lastMessage (String)：最后一条消息内容
-  - lastMessageTime (LocalDateTime)：最后一条消息时间
+- **右侧面板**（可折叠）
+  - 当前会话信息
+  - 知识库搜索结果
+  - 相关文档显示
 
-- `PageResult<SessionVO>`：分页查询结果
-  - records (List<SessionVO>)：数据列表
-  - total (Long)：总记录数
-  - current (Long)：当前页码
-  - size (Long)：每页大小
-  - pages (Long)：总页数
-  - hasNext (Boolean)：是否有下一页
-  - hasPrevious (Boolean)：是否有上一页
+#### 2.4 聊天功能模块
+**核心功能**：
+- **实时消息显示**
+  - 消息气泡样式（用户/AI区分）
+  - 消息时间戳显示
+  - 消息状态指示（发送中、已发送、失败）
+  - 滚动到底部自动跟随
 
-#### 2.3 智能对话功能
-**Service层**：
-- `ChatService`：对话业务逻辑
-- `RAGService`：检索增强生成服务
-- `LLMService`：大语言模型调用服务
+- **消息输入与发送**
+  - 多行文本输入框
+  - 快捷键支持（Ctrl+Enter发送）
+  - 文件拖拽上传
+  - 发送按钮状态管理
 
-**Controller接口**：
-- `POST /api/v1/chat/ask`：智能问答（阻塞式）
-- `POST /api/v1/chat/stream`：流式智能问答
-- `GET /api/v1/chat/history/{sessionId}`：获取对话历史
-- `POST /api/v1/chat/feedback`：用户反馈接口
+- **流式对话支持**
+  - 实时显示AI回复
+  - 打字机效果
+  - 中断生成功能
+  - 重新生成选项
 
-#### 2.4 RAG核心流程
-- 知识库检索逻辑
-- 上下文构建算法
-- 提示词模板管理
-- 回答质量评估
+**API对接**：
+- `POST /api/v1/chat/ask` - 智能问答（阻塞式）
+- `POST /api/v1/chat/stream` - 流式智能问答
+- `POST /api/v1/chat/getChatHistory` - 获取对话历史
+- `POST /api/v1/chat/feedback` - 用户反馈
+
+#### 2.5 会话管理模块
+**功能实现**：
+- **会话列表**
+  - 会话卡片展示（标题、最后消息、时间）
+  - 会话状态标识（活跃、归档、删除）
+  - 分页加载
+  - 搜索过滤
+
+- **会话操作**
+  - 新建会话
+  - 重命名会话
+  - 归档/恢复会话
+  - 删除会话
+  - 会话详情查看
+
+**API对接**：
+- `POST /api/v1/chat/sessions/create` - 创建会话
+- `POST /api/v1/chat/sessions/list` - 会话列表
+- `GET /api/v1/chat/sessions/detail/{sessionId}` - 会话详情
+- `POST /api/v1/chat/sessions/update-title` - 更新标题
+
+#### 2.6 知识库管理模块
+**页面功能**：
+- **文档管理**
+  - 文档上传（支持多种格式）
+  - 文档列表展示
+  - 文档预览
+  - 文档删除
+  - 上传进度显示
+
+- **知识库搜索**
+  - 实时搜索功能
+  - 搜索结果高亮
+  - 相关性排序
+  - 搜索历史记录
+
+**API对接**：
+- `POST /api/v1/knowledge-base/upload-file` - 文件上传
+- `POST /api/v1/knowledge-base/insert-text` - 插入文本内容
+- `GET /api/v1/knowledge-base/search` - 知识库搜索
+
+#### 2.7 技术实现细节
+**前端技术栈**：
+- **HTML5**：语义化标签，提升可访问性
+- **CSS3**：Flexbox/Grid布局，CSS变量主题切换
+- **JavaScript ES6+**：模块化开发，Promise/async-await
+- **WebSocket**：实时通信，断线重连
+- **Fetch API**：HTTP请求封装，错误处理
+- **LocalStorage**：本地数据持久化
+
+**性能优化**：
+- 图片懒加载
+- 代码分割和按需加载
+- CSS/JS压缩
+- 浏览器缓存策略
+- 防抖节流优化
+
+**兼容性保证**：
+- 现代浏览器支持（Chrome 70+, Firefox 65+, Safari 12+）
+- 移动端响应式适配
+- 降级处理方案
 
 ### ✅ 交付物
+**后端功能**：
 - ✅ **完整的会话管理功能**（已完成）
   - 9个会话管理接口全部实现
   - 完整的请求参数验证和响应对象
   - 支持会话的CRUD操作、归档、恢复等功能
   - 分页查询和关键词搜索功能
   - 用户权限验证和数据隔离
-- 基础的智能对话能力（待开发）
-- RAG检索增强逻辑（待开发）
-- 核心业务接口测试（待完善）
+- ✅ **智能对话功能**（已完成）
+  - 阻塞式和流式问答接口
+  - 对话历史管理
+  - 用户反馈机制
+- ✅ **知识库管理功能**（已完成）
+  - 文件上传和文本插入
+  - 知识库搜索功能
+- ✅ **用户认证功能**（已完成）
+  - 用户登录注册
+  - 用户名检查
+  - 用户信息管理
+
+**前端功能**：
+- 完整的前端页面（登录、注册、主界面）
+- 用户认证流程
+- 实时聊天功能
+- 会话管理界面
+- 知识库管理界面
+- 响应式设计适配
+- 跨浏览器兼容性测试
 
 ---
 
-## 📚 第三阶段：知识库管理优化（1-2周）
+## 🔧 第三阶段：后端功能完善与优化（2-3周）
 
 ### 🎯 目标
-完善知识库管理功能，优化现有KnowledgeBaseController
+完善后端核心功能，优化性能和稳定性，增强系统监控
 
 ### 📋 核心任务
 
-#### 3.1 知识库管理重构
-**Service层优化**：
-- `KnowledgeBaseService`：知识库核心服务
-- `DocumentProcessService`：文档处理服务
-- `VectorStoreService`：向量存储服务
+#### 3.1 会话管理功能完善
+**已实现接口优化**：
+- `ChatSessionController` 性能优化
+  - 分页查询优化（索引优化）
+  - 会话统计功能增强
+  - 批量操作支持
+  - 会话导出功能
 
-**Controller接口重构**：
-- `POST /api/v1/knowledge-base/documents/upload`：文档上传（支持多文件）
-- `POST /api/v1/knowledge-base/documents/text`：文本内容插入
-- `GET /api/v1/knowledge-base/documents`：文档列表查询（分页）
-- `DELETE /api/v1/knowledge-base/documents/{documentId}`：删除文档
-- `GET /api/v1/knowledge-base/documents/{documentId}/status`：文档处理状态
-- `GET /api/v1/knowledge-base/search`：知识库搜索
-- `DELETE /api/v1/knowledge-base/documents/batch`：批量删除文档
+**新增功能**：
+- 会话模板管理
+- 会话分享功能
+- 会话标签分类
+- 会话备份恢复
 
-#### 3.2 文档处理优化
-- 多格式文档支持（PDF、Word、TXT等）
-- 文档分块策略优化
-- 向量化处理流程
-- 处理状态跟踪
+#### 3.2 智能对话功能增强
+**已实现接口优化**：
+- `ChatController` 流式响应优化
+  - 响应速度提升
+  - 错误处理完善
+  - 上下文管理优化
+  - Token使用统计
 
-#### 3.3 用户隔离机制
-- 基于用户的知识库隔离
-- 文档权限控制
-- 数据安全保障
+**新增功能**：
+- 多轮对话上下文管理
+- 对话质量评估
+- 自动摘要生成
+- 敏感内容过滤
 
-### ✅ 交付物
-- 重构后的知识库管理功能
-- 完善的文档处理流程
-- 用户数据隔离机制
-- 知识库管理接口测试
+#### 3.3 知识库管理优化
+**已实现接口完善**：
+- `KnowledgeBaseController` 功能扩展
+  - 文档处理状态跟踪
+  - 批量文档操作
+  - 知识库统计分析
+  - 文档版本管理
 
----
+**性能优化**：
+- 文档向量化异步处理
+- 检索结果缓存
+- 相似度计算优化
+- 分布式文档处理
 
-## 👤 第四阶段：用户系统与权限管理（1周）
+#### 3.4 系统监控与日志
+**新增监控功能**：
+- 系统健康检查接口
+- 性能指标监控
+- 用户行为统计
+- 错误日志收集
 
-### 🎯 目标
-建立完整的用户认证和权限管理体系
-
-### 📋 核心任务
-
-#### 4.1 用户认证系统
-**Service层**：
-- `UserService`：用户业务逻辑
-- `AuthService`：认证服务
-- `JwtService`：JWT令牌服务
-
-**Controller接口**：
-- `POST /api/v1/users/register`：用户注册
-- `POST /api/v1/users/login`：用户登录
-- `POST /api/v1/users/logout`：用户登出
-- `GET /api/v1/users/profile`：获取用户信息
-- `PUT /api/v1/users/profile`：更新用户信息
-- `POST /api/v1/users/change-password`：修改密码
-
-#### 4.2 权限控制
-- JWT认证拦截器
-- 用户权限验证
-- 接口访问控制
-- 数据权限隔离
-
-#### 4.3 安全机制
-- 密码加密存储
-- 登录状态管理
-- 会话安全控制
+**日志体系完善**：
+- 结构化日志输出
+- 日志级别管理
+- 日志文件轮转
+- 敏感信息脱敏
 
 ### ✅ 交付物
-- 完整的用户认证系统
-- 权限控制机制
-- 安全防护措施
-- 用户系统接口测试
-
----
-
-## 🔧 第五阶段：系统优化与监控（1周）
-
-### 🎯 目标
-完善系统监控、异常处理和性能优化
-
-### 📋 核心任务
-
-#### 5.1 系统监控
-**Service层**：
-- `SystemMonitorService`：系统监控服务
-- `HealthCheckService`：健康检查服务
-
-**Controller接口**：
-- `GET /api/v1/system/health`：系统健康检查
-- `GET /api/v1/system/stats`：系统统计信息
-- `GET /api/v1/system/config`：系统配置信息
-- `GET /api/v1/system/metrics`：系统性能指标
-
-#### 5.2 异常处理
-- 全局异常处理器
-- 统一错误响应格式
-- 日志记录机制
-- 错误监控告警
-
-#### 5.3 性能优化
-- 接口响应时间优化
-- 数据库查询优化
-- 缓存策略设计
-- 并发处理优化
-
-### ✅ 交付物
+- 优化后的会话管理功能
+- 增强的智能对话能力
+- 完善的知识库管理
 - 系统监控体系
-- 完善的异常处理机制
-- 性能优化方案
-- 系统稳定性验证
+- 性能优化报告
 
 ---
 
-## 🧪 第六阶段：测试与部署（1周）
+## 🔗 第四阶段：前后端集成与测试（1-2周）
 
 ### 🎯 目标
-全面测试系统功能，准备生产环境部署
+完成前后端完整集成，进行全面功能测试和性能优化
 
 ### 📋 核心任务
 
-#### 6.1 测试体系
-- 单元测试完善
-- 集成测试执行
-- 接口测试验证
-- 性能测试评估
-- 安全测试检查
+#### 4.1 前后端接口联调
+**API集成测试**：
+- 用户认证流程测试
+  - 登录/注册接口联调
+  - JWT令牌传递验证
+  - 用户状态同步
 
-#### 6.2 部署准备
-- 生产环境配置
-- 数据库迁移脚本
-- 部署文档编写
-- 运维监控配置
+- 会话管理功能测试
+  - 会话CRUD操作验证
+  - 分页查询功能测试
+  - 实时数据同步
 
-#### 6.3 文档完善
-- API文档生成（Swagger）
-- 部署指南更新
-- 用户使用手册
-- 开发者文档
+- 智能对话功能测试
+  - 消息发送接收验证
+  - 流式响应处理
+  - WebSocket连接稳定性
+
+- 知识库管理功能测试
+  - 文件上传功能验证
+  - 搜索结果展示
+  - 文档管理操作
+
+#### 4.2 用户体验优化
+**前端交互优化**：
+- 加载状态提示
+- 错误信息友好展示
+- 操作反馈机制
+- 响应式布局调优
+
+**性能优化**：
+- 接口响应时间优化
+- 前端资源加载优化
+- 缓存策略实施
+- 网络请求优化
+
+#### 4.3 安全性测试
+**安全验证**：
+- 用户权限验证
+- 数据访问控制
+- XSS/CSRF防护
+- 敏感信息保护
+
+#### 4.4 兼容性测试
+**浏览器兼容性**：
+- Chrome、Firefox、Safari测试
+- 移动端浏览器适配
+- 不同屏幕尺寸测试
 
 ### ✅ 交付物
-- 完整的测试报告
-- 生产环境部署包
-- 完善的项目文档
-- 系统上线准备
+- 完整的前后端集成系统
+- 功能测试报告
+- 性能优化方案
+- 用户体验改进清单
+- 兼容性测试报告
+
+---
+
+## 🚀 第五阶段：系统部署与上线（1周）
+
+### 🎯 目标
+完成系统部署，确保生产环境稳定运行
+
+### 📋 核心任务
+
+#### 5.1 生产环境准备
+**环境配置**：
+- 服务器环境搭建
+- 数据库部署配置
+- 域名和SSL证书配置
+- 负载均衡配置
+
+**部署脚本**：
+- 自动化部署脚本
+- 数据库迁移脚本
+- 环境变量配置
+- 服务启动脚本
+
+#### 5.2 监控与运维
+**系统监控**：
+- 服务健康检查
+- 性能指标监控
+- 错误日志监控
+- 用户访问统计
+
+**运维工具**：
+- 日志收集系统
+- 监控告警机制
+- 备份恢复策略
+- 故障处理流程
+
+#### 5.3 上线验证
+**功能验证**：
+- 生产环境功能测试
+- 性能压力测试
+- 安全漏洞扫描
+- 用户体验验证
+
+### ✅ 交付物
+- 生产环境部署
+- 监控运维体系
+- 上线验证报告
+- 运维操作手册
+
+---
+
+## 📚 第六阶段：文档完善与培训（1周）
+
+### 🎯 目标
+完善项目文档，进行用户培训和知识转移
+
+### 📋 核心任务
+
+#### 6.1 技术文档
+**开发文档**：
+- API接口文档（Swagger）
+- 数据库设计文档
+- 系统架构文档
+- 部署运维文档
+
+**代码文档**：
+- 代码注释完善
+- 开发规范文档
+- 测试用例文档
+- 故障排查手册
+
+#### 6.2 用户文档
+**使用手册**：
+- 用户操作指南
+- 功能介绍文档
+- 常见问题解答
+- 最佳实践指南
+
+#### 6.3 培训与交付
+**知识转移**：
+- 技术培训会议
+- 操作演示培训
+- 问题答疑会议
+- 后续支持计划
+
+### ✅ 交付物
+- 完整的技术文档
+- 用户操作手册
+- 培训材料
+- 项目交付报告
 
 ---
 
@@ -323,21 +510,22 @@
 
 | 阶段 | 时间 | 核心产出 | 里程碑 |
 |------|------|----------|--------|
-| 第一阶段 | 1-2周 | 数据层搭建 | 数据访问层完成 |
-| 第二阶段 | 2-3周 | 核心业务功能 | MVP功能完成 |
-| 第三阶段 | 1-2周 | 知识库优化 | 知识库管理完善 |
-| 第四阶段 | 1周 | 用户系统 | 用户认证完成 |
-| 第五阶段 | 1周 | 系统优化 | 系统稳定性提升 |
-| 第六阶段 | 1周 | 测试部署 | 系统上线就绪 |
-| **总计** | **7-10周** | **完整系统** | **生产环境部署** |
+| 第一阶段 | 1-2周 | 后端功能完善 | 核心API接口完成 |
+| 第二阶段 | 2-3周 | 前端页面开发 | 完整前端界面 |
+| 第三阶段 | 2-3周 | 后端功能优化 | 性能和稳定性提升 |
+| 第四阶段 | 1-2周 | 前后端集成 | 系统集成完成 |
+| 第五阶段 | 1周 | 系统部署 | 生产环境上线 |
+| 第六阶段 | 1周 | 文档培训 | 项目交付完成 |
+| **总计** | **8-12周** | **完整系统** | **项目成功交付** |
 
 ## 🎯 关键成功因素
 
-1. **数据层稳固**：确保多数据源配置正确，数据访问层稳定
-2. **RAG流程完善**：知识库检索和AI对话的核心逻辑要扎实
-3. **用户体验优先**：会话管理和对话交互要流畅自然
-4. **安全性保障**：用户数据隔离和权限控制要严格
-5. **系统可维护**：代码结构清晰，监控体系完善
+1. **后端API稳定**：确保现有接口功能完善，性能优化到位
+2. **前端用户体验**：原生HTML技术栈实现流畅的用户交互
+3. **前后端集成**：API对接顺畅，数据传输稳定可靠
+4. **RAG功能完善**：知识库检索和AI对话的核心逻辑要扎实
+5. **系统部署稳定**：生产环境配置正确，监控体系完善
+6. **文档和培训**：完善的技术文档和用户培训确保项目成功交付
 
-这个规划确保了从底层数据到上层应用的逐步构建，每个阶段都有明确的交付物和验收标准，为项目的成功实施提供了清晰的路线图。
+这个规划基于当前已完成的后端功能，重点关注前端开发和系统集成，确保在现有基础上快速构建完整的智能知识助手系统，每个阶段都有明确的交付物和验收标准。
         

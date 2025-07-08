@@ -65,12 +65,11 @@
 - **连接池**: HikariCP (高性能数据库连接池)
 - **AI模型**: 阿里云通义千问 (qwen-plus-latest) + text-embedding-v3
 
-### 前端技术栈 (规划中)
-- **框架**: Vue 3 + TypeScript
-- **UI库**: Element Plus
-- **状态管理**: Pinia
-- **构建工具**: Vite
-- **实时通信**: WebSocket
+### 前端技术栈
+- **技术**: 原生HTML + CSS + JavaScript
+- **特点**: 轻量级、快速集成、易维护
+- **通信**: WebSocket + Fetch API
+- **样式**: CSS3 + 响应式设计
 
 ### AI服务层
 - **LLM模型**: qwen-plus-latest (阿里云通义千问)
@@ -382,7 +381,7 @@ mysql.password=your_password                   # MySQL密码
 - ✅ **智能检索**: 基于向量相似度的语义搜索
 - ✅ **多数据源配置**: PostgreSQL(向量) + MySQL(业务)双数据源
 - 🚧 **AI对话功能**: 智能问答和会话管理 (开发中)
-- 🚧 **前端界面**: Vue 3 + Element Plus (规划中)
+- 🚧 **前端界面**: 原生HTML + CSS + JavaScript (开发中)
 - 📋 **WebSocket**: 实时通信和流式响应 (规划中)
 - 📋 **部署方案**: Docker + K8s (规划中)
 
@@ -390,6 +389,7 @@ mysql.password=your_password                   # MySQL密码
 
 - [产品需求文档 (PRD)](./doc/prd.md) - 详细的产品设计和业务需求
 - [技术实现文档](./doc/technical_implementation.md) - 技术架构和实现细节
+- [综合技术文档](./doc/综合技术文档.md) - 技术架构和实现细节
 - [PostgreSQL数据库初始化](./doc/init_database.sql) - 向量数据库初始化脚本
 - [MySQL数据库初始化](./doc/init_mysql_database.sql) - 业务数据库初始化脚本
 - [GitHub仓库](https://github.com/Matthew-Miao/mxy-rag-server) - 源代码和版本管理
@@ -422,4 +422,4 @@ mysql.password=your_password                   # MySQL密码
 
 **许可证**: Apache 2.0 License  
 **版本**: v1.0 MVP  
-**最后更新**: 2025年6月
+**最后更新**: 2025年7月
