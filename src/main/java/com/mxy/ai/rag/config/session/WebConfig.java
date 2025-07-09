@@ -6,13 +6,10 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-import java.util.concurrent.Executor;
-
-/**
+import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;/**
  * Web配置类
- * 配置Spring MVC相关设置，包括拦截器注册
+ * 配置Spring MVC相关设置，包括拦截器注册和页面重定向
  * 
  * @author Mxy
  */
@@ -24,6 +21,22 @@ public class WebConfig implements WebMvcConfigurer {
     
     @Resource(name = "ttlTaskExecutor")
     private ThreadPoolTaskExecutor ttlTaskExecutor;
+    
+    /**
+     * 配置视图控制器
+     * 设置根路径重定向到登录页面
+     * 
+     * @param registry 视图控制器注册器
+     */
+    @Override
+    public void addViewControllers(ViewControllerRegistry registry) {
+        // 根路径重定向到登录页面
+        registry.addRedirectViewController("/", "/login.html");
+        // 空路径也重定向到登录页面
+        registry.addRedirectViewController("", "/login.html");
+        // 设置优先级
+        registry.setOrder(1);
+    }
     
     /**
      * 添加拦截器配置
@@ -51,7 +64,11 @@ public class WebConfig implements WebMvcConfigurer {
                     "/public/**",
                     "/favicon.ico",
                     // 错误页面
-                    "/error/**"
+                    "/error/**",
+                    // 用户认证相关接口（无需登录）
+                    "/api/v1/user/register",
+                    "/api/v1/user/login",
+                    "/api/v1/user/check-username"
                 )
                 // 设置拦截器顺序（数字越小优先级越高）
                 .order(1);

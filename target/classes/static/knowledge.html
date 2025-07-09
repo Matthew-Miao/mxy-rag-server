@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识库管理 - 智能问答系统</title>
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/knowledge.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="knowledge-container">
+        <!-- 头部导航 -->
+        <div class="header">
+            <div class="header-left">
+                <a href="chat.html" class="back-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    返回对话
+                </a>
+                <h1>
+                    <i class="fas fa-database"></i>
+                    知识库管理
+                </h1>
+            </div>
+            <div class="header-right">
+                <div class="user-info">
+                    <span id="current-username">用户</span>
+                    <div class="user-menu">
+                        <button class="btn btn-sm" id="user-menu-btn">
+                            <i class="fas fa-cog"></i>
+                        </button>
+                        <div class="dropdown-menu" id="user-dropdown">
+                            <a href="#" id="change-password-btn">
+                                <i class="fas fa-key"></i>
+                                修改密码
+                            </a>
+                            <a href="chat.html">
+                                <i class="fas fa-comments"></i>
+                                智能问答
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="#" id="logout-btn">
+                                <i class="fas fa-sign-out-alt"></i>
+                                退出登录
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 主要内容区域 -->
+        <div class="main-content">
+            <!-- 上传区域 -->
+            <div class="upload-section">
+                <div class="section-header">
+                    <h2>
+                        <i class="fas fa-upload"></i>
+                        知识上传
+                    </h2>
+                    <p>支持文件上传和文本直接输入两种方式</p>
+                </div>
+                
+                <div class="upload-tabs">
+                    <button class="tab-btn active" data-tab="file">
+                        <i class="fas fa-file"></i>
+                        文件上传
+                    </button>
+                    <button class="tab-btn" data-tab="text">
+                        <i class="fas fa-edit"></i>
+                        文本输入
+                    </button>
+                </div>
+                
+                <!-- 文件上传标签页 -->
+                <div class="tab-content active" id="file-tab">
+                    <div class="file-upload-area">
+                        <div class="drag-drop-area" id="drag-drop-area">
+                            <div class="drag-drop-content">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <h3>拖拽文件到此处或点击选择</h3>
+                                <p>支持 PDF、DOC、DOCX、TXT、MD 格式</p>
+                                <p>单个文件最大 10MB</p>
+                                <button class="btn btn-primary" id="select-files-btn">
+                                    <i class="fas fa-folder-open"></i>
+                                    选择文件
+                                </button>
+                            </div>
+                            <input type="file" id="file-input" multiple accept=".pdf,.doc,.docx,.txt,.md" hidden>
+                        </div>
+                        
+                        <!-- 文件列表 -->
+                        <div class="file-list" id="file-list">
+                            <div class="file-list-header">
+                                <h4>上传队列</h4>
+                                <div class="file-actions">
+                                    <button class="btn btn-sm btn-secondary" id="clear-queue-btn">
+                                        <i class="fas fa-trash"></i>
+                                        清空队列
+                                    </button>
+                                    <button class="btn btn-sm btn-primary" id="upload-all-btn" disabled>
+                                        <i class="fas fa-upload"></i>
+                                        开始上传
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="file-items" id="file-items">
+                                <!-- 文件项将在这里动态生成 -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 文本输入标签页 -->
+                <div class="tab-content" id="text-tab">
+                    <div class="text-input-area">
+                        <div class="text-input-header">
+                            <h4>直接输入文本内容</h4>
+                            <div class="text-actions">
+                                <button class="btn btn-sm btn-secondary" id="clear-text-btn">
+                                    <i class="fas fa-eraser"></i>
+                                    清空
+                                </button>
+                                <button class="btn btn-sm btn-primary" id="submit-text-btn" disabled>
+                                    <i class="fas fa-plus"></i>
+                                    添加到知识库
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="text-input-form">
+                            <div class="form-group">
+                                <label for="text-title">标题</label>
+                                <input type="text" id="text-title" placeholder="请输入文本标题" maxlength="100">
+                                <div class="help-text">最多100个字符</div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="text-content">内容</label>
+                                <textarea 
+                                    id="text-content" 
+                                    placeholder="请输入要添加到知识库的文本内容..." 
+                                    rows="10"
+                                    maxlength="10000"
+                                ></textarea>
+                                <div class="char-count">
+                                    <span id="text-char-count">0</span>/10000
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 搜索区域 -->
+            <div class="search-section">
+                <div class="section-header">
+                    <h2>
+                        <i class="fas fa-search"></i>
+                        知识库搜索
+                    </h2>
+                    <p>搜索已上传的知识内容</p>
+                </div>
+                
+                <div class="search-form">
+                    <div class="search-input-group">
+                        <input type="text" id="search-input" placeholder="输入关键词搜索知识库..." maxlength="200">
+                        <button class="btn btn-primary" id="search-btn">
+                            <i class="fas fa-search"></i>
+                            搜索
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="search-results" id="search-results">
+                    <!-- 搜索结果将在这里显示 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 修改密码对话框 -->
+    <div id="change-password-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>修改密码</h3>
+                <button class="modal-close" id="close-password-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="change-password-form">
+                    <div class="form-group">
+                        <label for="current-password">当前密码</label>
+                        <div class="password-input">
+                            <input type="password" id="current-password" name="oldPassword" required>
+                            <button type="button" class="password-toggle" data-target="current-password">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="error-message" id="current-password-error"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="new-password">新密码</label>
+                        <div class="password-input">
+                            <input type="password" id="new-password" name="newPassword" required>
+                            <button type="button" class="password-toggle" data-target="new-password">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="error-message" id="new-password-error"></div>
+                        <div class="help-text">密码至少8位，包含字母和数字</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirm-new-password">确认新密码</label>
+                        <div class="password-input">
+                            <input type="password" id="confirm-new-password" name="confirmPassword" required>
+                            <button type="button" class="password-toggle" data-target="confirm-new-password">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="error-message" id="confirm-new-password-error"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancel-password-btn">取消</button>
+                <button class="btn btn-primary" id="save-password-btn">保存</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 加载提示 -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p>处理中...</p>
+        </div>
+    </div>
+    
+    <!-- 消息提示 -->
+    <div id="message-container" class="message-container"></div>
+    
+    <!-- JavaScript -->
+    <script src="js/common.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/knowledge.js"></script>
+    <script>
+        class KnowledgePage {
+            constructor() {
+                this.currentTab = 'file';
+                this.init();
+            }
+            
+            init() {
+                // 检查登录状态
+                PageGuard.setup({ requireAuth: true });
+                
+                this.setupEventListeners();
+                this.loadUserInfo();
+            }
+            
+            setupEventListeners() {
+                // 标签页切换
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        this.switchTab(btn.dataset.tab);
+                    });
+                });
+                
+                // 文件上传相关
+                document.getElementById('select-files-btn').addEventListener('click', () => {
+                    document.getElementById('file-input').click();
+                });
+                
+                document.getElementById('file-input').addEventListener('change', (e) => {
+                    this.handleFileSelect(e.target.files);
+                });
+                
+                document.getElementById('clear-queue-btn').addEventListener('click', () => {
+                    knowledgeManager.clearQueue();
+                });
+                
+                document.getElementById('upload-all-btn').addEventListener('click', () => {
+                    knowledgeManager.uploadAll();
+                });
+                
+                // 文本输入相关
+                document.getElementById('text-content').addEventListener('input', () => {
+                    this.handleTextInput();
+                });
+                
+                document.getElementById('text-title').addEventListener('input', () => {
+                    this.updateTextSubmitButton();
+                });
+                
+                document.getElementById('clear-text-btn').addEventListener('click', () => {
+                    this.clearTextInput();
+                });
+                
+                document.getElementById('submit-text-btn').addEventListener('click', () => {
+                    this.submitText();
+                });
+                
+                // 搜索相关
+                document.getElementById('search-input').addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        this.performSearch();
+                    }
+                });
+                
+                document.getElementById('search-btn').addEventListener('click', () => {
+                    this.performSearch();
+                });
+                
+                // 用户菜单
+                document.getElementById('user-menu-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.toggleUserMenu();
+                });
+                
+                document.addEventListener('click', () => {
+                    this.closeUserMenu();
+                });
+                
+                // 修改密码
+                document.getElementById('change-password-btn').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.showChangePasswordModal();
+                });
+                
+                // 退出登录
+                document.getElementById('logout-btn').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.logout();
+                });
+                
+                // 模态框事件
+                this.setupModalEvents();
+                
+                // 密码显示/隐藏
+                document.querySelectorAll('.password-toggle').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const target = e.currentTarget.dataset.target;
+                        const input = document.getElementById(target);
+                        const icon = e.currentTarget.querySelector('i');
+                        
+                        if (input.type === 'password') {
+                            input.type = 'text';
+                            icon.className = 'fas fa-eye-slash';
+                        } else {
+                            input.type = 'password';
+                            icon.className = 'fas fa-eye';
+                        }
+                    });
+                });
+                
+                // 监听知识库管理器事件
+                this.setupKnowledgeEvents();
+            }
+            
+            setupKnowledgeEvents() {
+                // 文件队列更新
+                knowledgeManager.on('queueUpdated', (e) => {
+                    this.updateFileList(e.detail.files);
+                });
+                
+                // 上传进度更新
+                knowledgeManager.on('uploadProgress', (e) => {
+                    this.updateUploadProgress(e.detail);
+                });
+                
+                // 上传完成
+                knowledgeManager.on('uploadComplete', (e) => {
+                    this.onUploadComplete(e.detail);
+                });
+                
+                // 搜索结果
+                knowledgeManager.on('searchComplete', (e) => {
+                    this.displaySearchResults(e.detail.results);
+                });
+            }
+            
+            setupModalEvents() {
+                // 修改密码模态框
+                document.getElementById('close-password-modal').addEventListener('click', () => {
+                    this.hideChangePasswordModal();
+                });
+                
+                document.getElementById('cancel-password-btn').addEventListener('click', () => {
+                    this.hideChangePasswordModal();
+                });
+                
+                document.getElementById('save-password-btn').addEventListener('click', () => {
+                    this.handleChangePassword();
+                });
+            }
+            
+            loadUserInfo() {
+                const user = authManager.getCurrentUser();
+                if (user) {
+                    document.getElementById('current-username').textContent = user.username || '用户';
+                }
+            }
+            
+            switchTab(tabName) {
+                if (this.currentTab === tabName) return;
+                
+                // 更新标签按钮状态
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.tab === tabName);
+                });
+                
+                // 更新内容区域
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.toggle('active', content.id === `${tabName}-tab`);
+                });
+                
+                this.currentTab = tabName;
+            }
+            
+            handleFileSelect(files) {
+                knowledgeManager.addFiles(files);
+            }
+            
+            updateFileList(files) {
+                const container = document.getElementById('file-items');
+                const uploadBtn = document.getElementById('upload-all-btn');
+                
+                container.innerHTML = '';
+                
+                if (files.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-queue">
+                            <i class="fas fa-inbox"></i>
+                            <p>暂无文件</p>
+                        </div>
+                    `;
+                    uploadBtn.disabled = true;
+                    return;
+                }
+                
+                files.forEach(file => {
+                    const item = this.createFileItem(file);
+                    container.appendChild(item);
+                });
+                
+                uploadBtn.disabled = false;
+            }
+            
+            createFileItem(file) {
+                const item = document.createElement('div');
+                item.className = 'file-item';
+                item.dataset.fileId = file.id;
+                
+                const statusClass = file.status === 'uploading' ? 'uploading' : 
+                                  file.status === 'completed' ? 'completed' : 
+                                  file.status === 'error' ? 'error' : 'pending';
+                
+                item.innerHTML = `
+                    <div class="file-info">
+                        <div class="file-icon">
+                            <i class="fas ${this.getFileIcon(file.name)}"></i>
+                        </div>
+                        <div class="file-details">
+                            <div class="file-name">${Utils.escapeHtml(file.name)}</div>
+                            <div class="file-size">${Utils.formatFileSize(file.size)}</div>
+                        </div>
+                    </div>
+                    <div class="file-status ${statusClass}">
+                        ${this.getStatusContent(file)}
+                    </div>
+                    <div class="file-actions">
+                        ${file.status === 'pending' ? `
+                            <button class="action-btn remove-file-btn" data-file-id="${file.id}">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                `;
+                
+                // 移除文件按钮
+                const removeBtn = item.querySelector('.remove-file-btn');
+                if (removeBtn) {
+                    removeBtn.addEventListener('click', () => {
+                        knowledgeManager.removeFile(file.id);
+                    });
+                }
+                
+                return item;
+            }
+            
+            getFileIcon(filename) {
+                const ext = Utils.getFileExtension(filename).toLowerCase();
+                switch (ext) {
+                    case 'pdf': return 'fa-file-pdf';
+                    case 'doc':
+                    case 'docx': return 'fa-file-word';
+                    case 'txt': return 'fa-file-alt';
+                    case 'md': return 'fa-file-code';
+                    default: return 'fa-file';
+                }
+            }
+            
+            getStatusContent(file) {
+                switch (file.status) {
+                    case 'pending':
+                        return '<i class="fas fa-clock"></i> 等待上传';
+                    case 'uploading':
+                        return `
+                            <div class="upload-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${file.progress || 0}%"></div>
+                                </div>
+                                <span class="progress-text">${file.progress || 0}%</span>
+                            </div>
+                        `;
+                    case 'completed':
+                        return '<i class="fas fa-check"></i> 上传成功';
+                    case 'error':
+                        return `<i class="fas fa-exclamation-triangle"></i> ${file.error || '上传失败'}`;
+                    default:
+                        return '';
+                }
+            }
+            
+            updateUploadProgress(data) {
+                const item = document.querySelector(`[data-file-id="${data.fileId}"]`);
+                if (item) {
+                    const statusEl = item.querySelector('.file-status');
+                    statusEl.className = 'file-status uploading';
+                    statusEl.innerHTML = this.getStatusContent({
+                        status: 'uploading',
+                        progress: data.progress
+                    });
+                }
+            }
+            
+            onUploadComplete(data) {
+                const item = document.querySelector(`[data-file-id="${data.fileId}"]`);
+                if (item) {
+                    const statusEl = item.querySelector('.file-status');
+                    const actionsEl = item.querySelector('.file-actions');
+                    
+                    if (data.success) {
+                        statusEl.className = 'file-status completed';
+                        statusEl.innerHTML = this.getStatusContent({ status: 'completed' });
+                    } else {
+                        statusEl.className = 'file-status error';
+                        statusEl.innerHTML = this.getStatusContent({ 
+                            status: 'error', 
+                            error: data.error 
+                        });
+                    }
+                    
+                    actionsEl.innerHTML = '';
+                }
+            }
+            
+            handleTextInput() {
+                const textarea = document.getElementById('text-content');
+                const charCount = document.getElementById('text-char-count');
+                
+                charCount.textContent = textarea.value.length;
+                this.updateTextSubmitButton();
+            }
+            
+            updateTextSubmitButton() {
+                const title = document.getElementById('text-title').value.trim();
+                const content = document.getElementById('text-content').value.trim();
+                const submitBtn = document.getElementById('submit-text-btn');
+                
+                submitBtn.disabled = !title || !content;
+            }
+            
+            clearTextInput() {
+                document.getElementById('text-title').value = '';
+                document.getElementById('text-content').value = '';
+                document.getElementById('text-char-count').textContent = '0';
+                this.updateTextSubmitButton();
+            }
+            
+            async submitText() {
+                const title = document.getElementById('text-title').value.trim();
+                const content = document.getElementById('text-content').value.trim();
+                
+                if (!title || !content) {
+                    Utils.showMessage('请填写标题和内容', 'warning');
+                    return;
+                }
+                
+                try {
+                    await knowledgeManager.insertText(title, content);
+                    this.clearTextInput();
+                } catch (error) {
+                    Utils.showMessage(error.message || '添加文本失败', 'error');
+                }
+            }
+            
+            async performSearch() {
+                const query = document.getElementById('search-input').value.trim();
+                
+                if (!query) {
+                    Utils.showMessage('请输入搜索关键词', 'warning');
+                    return;
+                }
+                
+                try {
+                    await knowledgeManager.search(query);
+                } catch (error) {
+                    Utils.showMessage(error.message || '搜索失败', 'error');
+                }
+            }
+            
+            displaySearchResults(results) {
+                const container = document.getElementById('search-results');
+                
+                if (results.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-results">
+                            <i class="fas fa-search"></i>
+                            <h3>未找到相关内容</h3>
+                            <p>请尝试其他关键词</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = `
+                    <div class="results-header">
+                        <h3>搜索结果 (${results.length})</h3>
+                    </div>
+                    <div class="results-list">
+                        ${results.map(result => this.createResultItem(result)).join('')}
+                    </div>
+                `;
+            }
+            
+            createResultItem(result) {
+                return `
+                    <div class="result-item">
+                        <div class="result-header">
+                            <h4>${Utils.escapeHtml(result.title || '未命名')}</h4>
+                            <div class="result-score">
+                                相关度: ${Math.round((result.score || 0) * 100)}%
+                            </div>
+                        </div>
+                        <div class="result-content">
+                            ${Utils.escapeHtml(result.content || '').substring(0, 200)}...
+                        </div>
+                        <div class="result-meta">
+                            <span class="result-source">
+                                <i class="fas fa-file"></i>
+                                ${Utils.escapeHtml(result.source || '未知来源')}
+                            </span>
+                            <span class="result-time">
+                                ${Utils.formatTime(result.createTime)}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            toggleUserMenu() {
+                const dropdown = document.getElementById('user-dropdown');
+                dropdown.classList.toggle('show');
+            }
+            
+            closeUserMenu() {
+                const dropdown = document.getElementById('user-dropdown');
+                dropdown.classList.remove('show');
+            }
+            
+            showChangePasswordModal() {
+                document.getElementById('change-password-modal').classList.remove('hidden');
+                this.closeUserMenu();
+            }
+            
+            hideChangePasswordModal() {
+                document.getElementById('change-password-modal').classList.add('hidden');
+                document.getElementById('change-password-form').reset();
+                this.clearPasswordErrors();
+            }
+            
+            async handleChangePassword() {
+                const form = document.getElementById('change-password-form');
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData);
+                
+                // 验证表单
+                const validation = FormValidator.validateChangePassword(data);
+                if (!validation.isValid) {
+                    this.showPasswordErrors(validation.errors);
+                    return;
+                }
+                
+                try {
+                    await authManager.changePassword(data.oldPassword, data.newPassword);
+                    this.hideChangePasswordModal();
+                } catch (error) {
+                    Utils.showMessage(error.message || '修改密码失败', 'error');
+                }
+            }
+            
+            showPasswordErrors(errors) {
+                Object.keys(errors).forEach(field => {
+                    const errorEl = document.getElementById(`${field.replace(/([A-Z])/g, '-$1').toLowerCase()}-error`);
+                    if (errorEl) {
+                        errorEl.textContent = errors[field];
+                        errorEl.style.display = 'block';
+                    }
+                });
+            }
+            
+            clearPasswordErrors() {
+                document.querySelectorAll('#change-password-modal .error-message').forEach(el => {
+                    el.style.display = 'none';
+                });
+            }
+            
+            logout() {
+                if (confirm('确定要退出登录吗？')) {
+                    authManager.logout();
+                }
+            }
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            new KnowledgePage();
+        });
+    </script>
+</body>
+</html>

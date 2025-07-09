@@ -3,6 +3,7 @@ package com.mxy.ai.rag.web.controller;
 import com.mxy.ai.rag.dto.*;
 import com.mxy.ai.rag.service.ChatSessionService;
 import com.mxy.ai.rag.web.param.CreateSessionRequest;
+import com.mxy.ai.rag.web.param.DeleteSessionRequest;
 import com.mxy.ai.rag.web.param.SessionQueryRequest;
 import com.mxy.ai.rag.web.param.UpdateSessionTitleRequest;
 import com.mxy.ai.rag.util.UserContextUtil;
@@ -44,7 +45,7 @@ public class ChatSessionController {
      */
     @Operation(summary = "创建聊天会话", description = "创建一个新的聊天会话")
     @PostMapping("/create")
-    public ApiResult<Void> createSession(
+    public ApiResult<Long> createSession(
             @Parameter(description = "创建会话请求参数", required = true)
             @Valid @RequestBody CreateSessionRequest request) {
         try {
@@ -55,8 +56,8 @@ public class ChatSessionController {
             // 转换为DTO
             CreateSessionDTO dto = new CreateSessionDTO();
             BeanUtils.copyProperties(request, dto);
-            chatSessionService.createSession(dto);
-            return ApiResult.success();
+            Long sessionId = chatSessionService.createSession(dto);
+            return ApiResult.success(sessionId);
         } catch (Exception e) {
             logger.error("创建会话失败: {}", e.getMessage(), e);
             return ApiResult.error("创建会话失败: " + e.getMessage());
@@ -138,6 +139,35 @@ public class ChatSessionController {
         } catch (Exception e) {
             logger.error("更新会话标题失败: {}", e.getMessage(), e);
             return ApiResult.error("更新会话标题失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 删除会话
+     *
+     * @param request 删除会话请求参数
+     * @return 删除结果
+     */
+    @Operation(summary = "删除会话", description = "删除指定的会话")
+    @PostMapping("/delete")
+    public ApiResult<Void> deleteSession(
+            @Parameter(description = "删除会话请求参数", required = true)
+            @Valid @RequestBody DeleteSessionRequest request) {
+        try {
+            // 从用户上下文获取当前用户ID
+            String currentUserId = UserContextUtil.getCurrentUserId();
+            logger.info("删除会话: sessionId={}, userId={}", request.getSessionId(), currentUserId);
+
+            // 转换为DTO
+            DeleteSessionDTO dto = new DeleteSessionDTO();
+            BeanUtils.copyProperties(request, dto);
+            dto.setUserId(currentUserId);
+
+            chatSessionService.deleteSession(dto);
+            return ApiResult.success();
+        } catch (Exception e) {
+            logger.error("删除会话失败: {}", e.getMessage(), e);
+            return ApiResult.error("删除会话失败: " + e.getMessage());
         }
     }
 }

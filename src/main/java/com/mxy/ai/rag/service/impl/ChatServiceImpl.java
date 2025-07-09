@@ -68,7 +68,7 @@ public class ChatServiceImpl implements ChatService {
 
         long startTime = System.currentTimeMillis();
         try {
-            String conversationId = UUID.randomUUID().toString();
+            String conversationId = dto.getSessionId().toString();
             // 调用知识库服务获取回答
             String answer = knowledgeBaseService.chatWithKnowledge(dto.getQuestion(), conversationId, dto.getTopK());
             long responseTime = System.currentTimeMillis() - startTime;
@@ -103,7 +103,7 @@ public class ChatServiceImpl implements ChatService {
         // 验证会话是否存在且属于当前用户
         long startTime = System.currentTimeMillis();
         try {
-            String conversationId = UUID.randomUUID().toString();
+            String conversationId = dto.getSessionId().toString();
 
             // 调用知识库服务获取流式回答
             Flux<String> answerStream = knowledgeBaseService.chatWithKnowledgeStream(dto.getQuestion(), conversationId, dto.getTopK());

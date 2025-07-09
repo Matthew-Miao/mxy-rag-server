@@ -13,6 +13,6 @@ public class MxyAIRagApplication {
     public static void main(String[] args) {
         ConfigurableApplicationContext applicationContext = SpringApplication.run(MxyAIRagApplication.class, args);
         String port = applicationContext.getEnvironment().getProperty("server.port");
-        log.info("Image Agent Application started successfully! port:{}", port);
+        log.info("AI RAG Application started successfully! port:{}", port);
     }
 }

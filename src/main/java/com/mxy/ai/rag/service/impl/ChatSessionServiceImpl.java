@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.mxy.ai.rag.datasource.dao.ChatSessionsDAO;
 import com.mxy.ai.rag.datasource.entity.ChatSessionsDO;
 import com.mxy.ai.rag.dto.CreateSessionDTO;
+import com.mxy.ai.rag.dto.DeleteSessionDTO;
 import com.mxy.ai.rag.dto.SessionQueryDTO;
 import com.mxy.ai.rag.dto.UpdateSessionTitleDTO;
 import com.mxy.ai.rag.service.ChatSessionService;
@@ -31,7 +32,7 @@ public class ChatSessionServiceImpl implements ChatSessionService {
 
 
     @Override
-    public void createSession(CreateSessionDTO dto) {
+    public Long createSession(CreateSessionDTO dto) {
         log.info("创建会话: {}", dto);
         ChatSessionsDO sessionsDO = ChatSessionsDO.builder()
                 .title(dto.getTitle())
@@ -39,6 +40,7 @@ public class ChatSessionServiceImpl implements ChatSessionService {
                 .modifier(UserContextUtil.getCurrentUserId())
                 .build();
         chatSessionsDAO.save(sessionsDO);
+        return sessionsDO.getId();
     }
 
     @Override
@@ -51,6 +53,9 @@ public class ChatSessionServiceImpl implements ChatSessionService {
 
     @Override
     public PageResult<SessionVO> getSessionList(SessionQueryDTO dto) {
+        // 设置当前用户ID
+        dto.setUserId(UserContextUtil.getCurrentUserId());
+        
         Page<ChatSessionsDO> page = chatSessionsDAO.getSessionList(dto);
         List<ChatSessionsDO> records = page.getRecords();
         List<SessionVO> sessionVOS = records.stream().map(record -> {
@@ -76,5 +81,35 @@ public class ChatSessionServiceImpl implements ChatSessionService {
                 .modifier(UserContextUtil.getCurrentUserId())
                 .build();
         chatSessionsDAO.updateById(update);
+    }
+
+    @Override
+    public void deleteSession(DeleteSessionDTO dto) {
+        log.info("删除会话: sessionId={}, userId={}", dto.getSessionId(), dto.getUserId());
+        
+        // 检查会话是否存在
+        ChatSessionsDO chatSessionsDO = chatSessionsDAO.getById(dto.getSessionId());
+        if (chatSessionsDO == null) {
+            log.error("会话不存在: {}", dto.getSessionId());
+            throw new RuntimeException("会话不存在");
+        }
+        
+        // 检查会话是否属于当前用户
+        String currentUserId = UserContextUtil.getCurrentUserId();
+        if (!currentUserId.equals(chatSessionsDO.getCreator())) {
+            log.error("无权限删除会话: sessionId={}, currentUserId={}, creator={}", 
+                    dto.getSessionId(), currentUserId, chatSessionsDO.getCreator());
+            throw new RuntimeException("无权限删除该会话");
+        }
+        
+        // 软删除会话
+        ChatSessionsDO update = ChatSessionsDO.builder()
+                .id(dto.getSessionId())
+                .deleted(1)
+                .modifier(currentUserId)
+                .build();
+        chatSessionsDAO.updateById(update);
+        
+        log.info("会话删除成功: sessionId={}", dto.getSessionId());
     }
 }

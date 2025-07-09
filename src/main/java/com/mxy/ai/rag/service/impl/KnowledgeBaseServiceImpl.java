@@ -1,7 +1,6 @@
 package com.mxy.ai.rag.service.impl;
 
 import com.mxy.ai.rag.service.KnowledgeBaseService;
-import jakarta.annotation.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
@@ -12,9 +11,6 @@ import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.openai.OpenAiChatOptions;
-import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
-import org.springframework.ai.rag.preretrieval.query.transformation.CompressionQueryTransformer;
-import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
 import org.springframework.ai.reader.pdf.PagePdfDocumentReader;
 import org.springframework.ai.reader.tika.TikaDocumentReader;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
@@ -32,7 +28,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
-import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
 /**
@@ -43,27 +38,38 @@ import java.util.stream.Collectors;
 public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
 
     private static final Logger logger = LoggerFactory.getLogger(KnowledgeBaseServiceImpl.class);
+    
+    /**
+     * 系统提示词：指导AI智能地处理不同类型的问题
+     */
+    private static final String SYSTEM_PROMPT = "你是一个智能助手。请始终使用中文回答用户的问题。当回答用户问题时，请遵循以下策略：\n" +
+            "1. 对于基础知识问题（如数学计算、常识问题等），直接使用你的通用知识准确回答\n" +
+            "2. 对于专业或特定领域的问题，优先从向量数据库中检索相关知识来回答\n" +
+            "3. 如果向量数据库中没有找到相关信息，请从聊天记忆中寻找之前讨论过的相关内容\n" +
+            "4. 如果以上都没有相关信息，请基于你的通用知识给出准确、有帮助的回答\n" +
+            "5. 只有在确实无法回答时，才诚实地告知用户并建议他们提供更多信息\n" +
+            "请确保回答准确、相关且有帮助。不要因为向量数据库中没有信息就拒绝回答基础问题。所有回答都必须使用中文。";
 
     private final VectorStore vectorStore;
     private final ChatClient chatClient;
+    private final MessageWindowChatMemory messageWindowChatMemory;
 
-    @Resource
-    private Executor ttlTaskExecutor;
-
+    /**
+     * 构造函数：初始化知识库服务
+     * 不再使用Spring AI的MessageChatMemoryAdvisor，改为手动管理聊天记忆
+     * 
+     * @param vectorStore 向量存储
+     * @param chatModel 聊天模型
+     * @param messageWindowChatMemory 消息窗口聊天记忆
+     */
     public KnowledgeBaseServiceImpl(VectorStore vectorStore, @Qualifier("openAiChatModel")ChatModel chatModel,
                                     MessageWindowChatMemory messageWindowChatMemory) {
-        VectorStoreDocumentRetriever documentRetriever = VectorStoreDocumentRetriever.builder()
-                .vectorStore(vectorStore)
-                .similarityThreshold(0.50)
-                .topK(10)
-                .build();
-        RetrievalAugmentationAdvisor retrievalAugmentationAdvisor = RetrievalAugmentationAdvisor.builder()
-                .documentRetriever(documentRetriever)
-                .build();
         this.vectorStore = vectorStore;
+        this.messageWindowChatMemory = messageWindowChatMemory;
+
+                
         this.chatClient = ChatClient.builder(chatModel)
-                .defaultAdvisors(MessageChatMemoryAdvisor.builder(messageWindowChatMemory).build(),
-                        SimpleLoggerAdvisor.builder().build(), retrievalAugmentationAdvisor)
+                .defaultAdvisors(SimpleLoggerAdvisor.builder().build(),MessageChatMemoryAdvisor.builder(messageWindowChatMemory).build())
                 .defaultOptions(OpenAiChatOptions.builder().temperature(0.7).build())
                 .build();
     }
@@ -159,42 +165,83 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     }
 
     /**
-     * {@inheritDoc}
+     * 与知识库进行对话
+     * 手动管理聊天记忆，构建完整的对话历史传给大模型
+     * 
+     * @param query 用户查询
+     * @param conversationId 对话ID
+     * @param topK 检索文档数量
+     * @return 回答内容
      */
     @Override
     public String chatWithKnowledge(String query, String conversationId, int topK) {
         Assert.hasText(query, "查询问题不能为空");
-        logger.info("开始知识库对话，查询: '{}'", query);
-        // 调用LLM生成回答
-        String answer = chatClient.prompt()
-                .user(query)
-                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
-                .call().content();
+        logger.info("开始知识库对话，查询: '{}', conversationId: {}", query, conversationId);
+        
+        try {
+            String prompt = getRagStr(query, topK);
+            
+            // 3. 调用LLM生成回答
+            String answer = chatClient.prompt(prompt)
+                    .system(SYSTEM_PROMPT)
+                    .user(query)
+                    .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
+                    .call().content();
 
-        logger.info("知识库对话完成，查询: '{}'", query);
-        return answer;
+            logger.info("知识库对话完成，查询: '{}'", query);
+            return answer;
+            
+        } catch (Exception e) {
+            logger.error("知识库对话失败，查询: '{}'", query, e);
+            return "对话过程中发生错误: " + e.getMessage();
+        }
     }
 
     /**
-     * {@inheritDoc}
+     * 流式知识库对话
+     * 手动管理聊天记忆，构建完整的对话历史传给大模型
+     * 
+     * @param query 用户查询
+     * @param conversationId 对话ID
+     * @param topK 检索文档数量
+     * @return 流式回答内容
      */
     @Override
-    public Flux<String> chatWithKnowledgeStream(String query,String conversationId, int topK) {
+    public Flux<String> chatWithKnowledgeStream(String query, String conversationId, int topK) {
         Assert.hasText(query, "查询问题不能为空");
-        logger.info("开始流式知识库对话，查询: '{}'", query);
+        logger.info("开始流式知识库对话，查询: '{}', conversationId: {}", query, conversationId);
 
         try {
-            // 调用LLM生成流式回答
-            return chatClient.prompt()
-                    .user(query)
+            String prompt = getRagStr(query, topK);
+
+            return chatClient.prompt(prompt)
+                    .system(SYSTEM_PROMPT)
                     .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
+                    .user(query)
                     .stream()
                     .content();
-
         } catch (Exception e) {
-            logger.error("流式知识库对话失败，查询: '{}'", query, e);
-            return Flux.just("对话过程中发生错误: " + e.getMessage());
+             logger.error("流式知识库对话失败，查询: '{}'", query, e);
+             return Flux.just("对话过程中发生错误: " + e.getMessage());
+         }
+    }
+
+    /**
+     * 获取RAG提示词
+     *
+     * @param query 用户查询
+     * @param topK 检索文档数量
+     * @return 提示词
+     */
+    private String getRagStr(String query, int topK) {
+        List<Document> documents = similaritySearch(query, topK);
+        String prompt = "";
+        if (documents != null && !documents.isEmpty()){
+            // 构建提示词
+            String context = documents.stream().map(Document::getText).collect(Collectors.joining("\n\n"));
+            prompt = String.format( "知识库内容：\n%s\n\n" , context);
         }
+        return prompt;
     }
 
 }

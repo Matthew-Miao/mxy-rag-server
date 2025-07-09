@@ -17,4 +17,9 @@ public class SessionQueryDTO {
      * 每页大小
      */
     private Integer pageSize = 20;
+    
+    /**
+     * 用户ID
+     */
+    private String userId;
 }

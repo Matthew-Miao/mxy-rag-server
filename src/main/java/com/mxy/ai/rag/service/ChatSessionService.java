@@ -1,6 +1,7 @@
 package com.mxy.ai.rag.service;
 
 import com.mxy.ai.rag.dto.CreateSessionDTO;
+import com.mxy.ai.rag.dto.DeleteSessionDTO;
 import com.mxy.ai.rag.dto.SessionQueryDTO;
 import com.mxy.ai.rag.dto.UpdateSessionTitleDTO;
 import com.mxy.ai.rag.web.vo.PageResult;
@@ -20,7 +21,7 @@ public interface ChatSessionService {
      * @param dto
      * @return
      */
-    void createSession(CreateSessionDTO dto);
+    Long createSession(CreateSessionDTO dto);
 
     /**
      * 获取会话详情
@@ -45,4 +46,11 @@ public interface ChatSessionService {
      * @return
      */
     void updateSessionTitle(UpdateSessionTitleDTO dto);
+
+    /**
+     * 删除会话
+     *
+     * @param dto 删除会话请求参数
+     */
+    void deleteSession(DeleteSessionDTO dto);
 }
