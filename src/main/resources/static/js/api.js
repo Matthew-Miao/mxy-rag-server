@@ -139,6 +139,11 @@ class ApiClient {
      * @returns {Promise} 上传结果
      */
     async upload(url, formData, onProgress = null) {
+        console.log('🚀 ApiClient.upload 开始执行');
+        console.log('📍 上传URL:', url);
+        console.log('📦 FormData内容:', formData);
+        console.log('🔗 完整请求URL:', `${this.baseURL}${url}`);
+        
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
             
@@ -147,6 +152,7 @@ class ApiClient {
                 xhr.upload.addEventListener('progress', (e) => {
                     if (e.lengthComputable) {
                         const percentComplete = (e.loaded / e.total) * 100;
+                        console.log(`📊 上传进度: ${percentComplete.toFixed(2)}%`);
                         onProgress(percentComplete);
                     }
                 });
@@ -154,31 +160,43 @@ class ApiClient {
 
             // 设置完成监听
             xhr.addEventListener('load', () => {
+                console.log('✅ 上传请求完成，状态码:', xhr.status);
+                console.log('📄 响应内容:', xhr.responseText);
+                
                 if (xhr.status >= 200 && xhr.status < 300) {
                     try {
                         const response = JSON.parse(xhr.responseText);
+                        console.log('✅ 上传成功，解析后的响应:', response);
                         resolve(response);
                     } catch (e) {
+                        console.log('⚠️ JSON解析失败，返回原始文本:', xhr.responseText);
                         resolve(xhr.responseText);
                     }
                 } else {
+                    console.error('❌ 上传失败，状态码:', xhr.status, '状态文本:', xhr.statusText);
                     reject(new Error(`上传失败: ${xhr.status} ${xhr.statusText}`));
                 }
             });
 
             // 设置错误监听
             xhr.addEventListener('error', () => {
+                console.error('❌ 上传网络错误');
                 reject(new Error('上传失败: 网络错误'));
             });
 
+            // 打开请求（必须在设置请求头之前调用）
+            console.log('🚀 打开POST请求到:', `${this.baseURL}${url}`);
+            xhr.open('POST', `${this.baseURL}${url}`);
+            
             // 设置请求头
             const authHeaders = this.getAuthHeaders();
+            console.log('🔐 认证头信息:', authHeaders);
             Object.keys(authHeaders).forEach(key => {
                 xhr.setRequestHeader(key, authHeaders[key]);
             });
 
             // 发送请求
-            xhr.open('POST', `${this.baseURL}${url}`);
+            console.log('📤 发送FormData');
             xhr.send(formData);
         });
     }
@@ -386,9 +404,28 @@ class API {
      * @returns {Promise} 上传结果
      */
     async uploadFile(file, onProgress) {
+        console.log('🎯 API.uploadFile 被调用');
+        console.log('📁 文件信息:', {
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            lastModified: file.lastModified
+        });
+        
         const formData = new FormData();
         formData.append('file', file);
-        return this.client.upload('/knowledge-base/upload-file', formData, onProgress);
+        
+        console.log('📦 FormData已创建，文件已添加');
+        console.log('🔄 调用 client.upload 方法');
+        
+        try {
+            const result = await this.client.upload('/knowledge-base/upload-file', formData, onProgress);
+            console.log('✅ uploadFile 成功完成，结果:', result);
+            return result;
+        } catch (error) {
+            console.error('❌ uploadFile 失败:', error);
+            throw error;
+        }
     }
 
     /**

@@ -154,7 +154,7 @@ class ChatManager {
                 // 将消息按ID正序排列，确保消息按时间顺序显示
                 messages = messages.reverse();
                 
-                // 确保消息有正确的role字段
+                // 确保消息有正确的role字段和messageId字段
                 messages = messages.map(msg => {
                     // 如果没有role字段，根据messageType推断
                     if (!msg.role && msg.messageType) {
@@ -163,6 +163,10 @@ class ChatManager {
                     // 如果还是没有role，根据content特征推断
                     if (!msg.role) {
                         msg.role = 'assistant'; // 默认为assistant
+                    }
+                    // 将后端返回的id字段赋值给messageId，用于反馈功能
+                    if (msg.id && !msg.messageId) {
+                        msg.messageId = msg.id;
                     }
                     return msg;
                 });
@@ -394,12 +398,17 @@ class ChatManager {
      * @param {number} rating - 评分 (1-5)
      * @param {string} feedback - 反馈内容
      */
-    async submitFeedback(messageId, rating, feedback = '') {
+    /**
+     * 提交用户反馈
+     * @param {number} messageId - 消息ID
+     * @param {number} rating - 用户评分（1-5分）
+     * @returns {Promise<object>} 提交结果
+     */
+    async submitFeedback(messageId, rating) {
         try {
             const response = await api.submitFeedback({
                 messageId,
-                rating,
-                feedback
+                rating
             });
             
             if (response.code === 200) {
@@ -409,7 +418,6 @@ class ChatManager {
                 const message = this.messageHistory.find(m => m.messageId === messageId);
                 if (message) {
                     message.rating = rating;
-                    message.feedback = feedback;
                     this.dispatchEvent('messageUpdated', { message });
                 }
                 
@@ -580,7 +588,6 @@ class MessageRenderer {
                         `<span class="star" data-rating="${i}">★</span>`
                     ).join('')}
                 </div>
-                <textarea placeholder="可选：提供具体反馈" class="feedback-text"></textarea>
                 <div class="rating-actions">
                     <button class="btn btn-secondary cancel-btn">取消</button>
                     <button class="btn btn-primary submit-btn">提交</button>
@@ -615,13 +622,10 @@ class MessageRenderer {
                 return;
             }
             
-            const feedback = dialog.querySelector('.feedback-text').value;
-            
             try {
                 await window.chatManager.submitFeedback(
                     message.messageId, 
-                    selectedRating, 
-                    feedback
+                    selectedRating
                 );
                 document.body.removeChild(dialog);
             } catch (error) {
@@ -635,7 +639,56 @@ class MessageRenderer {
      * @param {string} content - 原始内容
      * @returns {string} 格式化后的内容
      */
+    /**
+     * 格式化消息内容，支持Markdown渲染
+     * @param {string} content - 原始消息内容
+     * @returns {string} 格式化后的HTML内容
+     */
     static formatMessageContent(content) {
+        if (!content) return '';
+        
+        try {
+            // 配置marked选项
+            if (typeof marked !== 'undefined') {
+                marked.setOptions({
+                    highlight: function(code, lang) {
+                        if (typeof hljs !== 'undefined' && lang && hljs.getLanguage(lang)) {
+                            try {
+                                return hljs.highlight(code, { language: lang }).value;
+                            } catch (err) {
+                                console.warn('代码高亮失败:', err);
+                            }
+                        }
+                        return code;
+                    },
+                    breaks: true,
+                    gfm: true,
+                    sanitize: false
+                });
+                
+                // 使用marked渲染Markdown
+                let html = marked.parse(content);
+                
+                // 为代码块添加复制按钮
+                html = this.addCopyButtonsToCodeBlocks(html);
+                
+                return html;
+            } else {
+                // 降级处理：如果marked未加载，使用简单的文本处理
+                return this.fallbackFormatContent(content);
+            }
+        } catch (error) {
+            console.error('Markdown渲染失败:', error);
+            return this.fallbackFormatContent(content);
+        }
+    }
+    
+    /**
+     * 降级内容格式化（当Markdown库不可用时）
+     * @param {string} content - 原始内容
+     * @returns {string} 格式化后的HTML
+     */
+    static fallbackFormatContent(content) {
         // 转义HTML
         content = Utils.escapeHtml(content);
         
@@ -655,6 +708,45 @@ class MessageRenderer {
         );
         
         return content;
+    }
+    
+    /**
+     * 为代码块添加复制按钮
+     * @param {string} html - HTML内容
+     * @returns {string} 添加复制按钮后的HTML
+     */
+    static addCopyButtonsToCodeBlocks(html) {
+        return html.replace(/<pre><code([^>]*)>([\s\S]*?)<\/code><\/pre>/g, (match, attrs, code) => {
+            const codeId = 'code-' + Math.random().toString(36).substr(2, 9);
+            return `
+                <div class="code-block-container">
+                    <div class="code-block-header">
+                        <button class="copy-code-btn" onclick="MessageRenderer.copyCode('${codeId}')" title="复制代码">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                    <pre><code${attrs} id="${codeId}">${code}</code></pre>
+                </div>
+            `;
+        });
+    }
+    
+    /**
+     * 复制代码到剪贴板
+     * @param {string} codeId - 代码块ID
+     */
+    static async copyCode(codeId) {
+        try {
+            const codeElement = document.getElementById(codeId);
+            if (codeElement) {
+                const text = codeElement.textContent || codeElement.innerText;
+                await navigator.clipboard.writeText(text);
+                Utils.showMessage('代码已复制到剪贴板', 'success', 2000);
+            }
+        } catch (error) {
+            console.error('复制失败:', error);
+            Utils.showMessage('复制失败', 'error', 2000);
+        }
     }
 }
 

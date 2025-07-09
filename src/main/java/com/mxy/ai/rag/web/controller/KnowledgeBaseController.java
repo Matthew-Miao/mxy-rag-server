@@ -1,6 +1,7 @@
 package com.mxy.ai.rag.web.controller;
 
 import com.mxy.ai.rag.service.KnowledgeBaseService;
+import com.mxy.ai.rag.web.vo.ApiResult;
 import org.springframework.ai.document.Document;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -37,15 +38,15 @@ public class KnowledgeBaseController {
      * @return 表示成功或失败的响应实体
      */
     @PostMapping("/insert-text")
-    public ResponseEntity<String> insertTextContent(@RequestParam("content") String content) {
+    public ApiResult<String> insertTextContent(@RequestParam("content") String content) {
         if (content == null || content.trim().isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("文本内容是必需的");
+            return ApiResult.error("文本内容是必需的");
         }
         try {
             knowledgeBaseService.insertTextContent(content);
-            return ResponseEntity.ok("文本内容已成功插入");
+            return ApiResult.success("文本内容已成功插入");
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("插入文本内容失败: " + e.getMessage());
+            return ApiResult. error("插入文本内容失败: " + e.getMessage());
         }
     }
 
@@ -57,15 +58,15 @@ public class KnowledgeBaseController {
      * @return 表示成功或失败的响应实体
      */
     @PostMapping("/upload-file")
-    public ResponseEntity<String> uploadFileByType(@RequestParam("file") MultipartFile file) {
+    public ApiResult<String> uploadFileByType(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("文件为空");
+            return ApiResult.error("文本内容是必需的");
         }
         try {
             String result = knowledgeBaseService.loadFileByType(file);
-            return ResponseEntity.ok(result);
+            return ApiResult.success(result);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("文件上传失败: " + e.getMessage());
+            return ApiResult.error("文件上传失败: " + e.getMessage());
         }
     }
 
@@ -77,20 +78,20 @@ public class KnowledgeBaseController {
      * @return 包含相似文档列表或错误消息的响应实体
      */
     @GetMapping("/search")
-    public ResponseEntity<?> similaritySearch(@RequestParam("query") String query,
+    public ApiResult<List<Document>> similaritySearch(@RequestParam("query") String query,
                                               @RequestParam(value = "topK", defaultValue = "5") int topK) {
         if (query == null || query.trim().isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("查询内容是必需的");
+            return ApiResult.error("查询内容是必需的");
         }
         if (topK <= 0) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("topK必须是正整数");
+            return ApiResult.error("topK必须是正整数");
         }
 
         try {
             List<Document> results = knowledgeBaseService.similaritySearch(query, topK);
-            return ResponseEntity.ok(results);
+            return ApiResult.success(results);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("相似性搜索过程中发生错误: " + e.getMessage());
+            return ApiResult.error("相似性搜索过程中发生错误: " + e.getMessage());
         }
     }
 

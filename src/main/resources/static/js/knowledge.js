@@ -43,16 +43,37 @@ class KnowledgeManager {
      * @returns {Promise<Array>} 上传结果
      */
     async uploadFiles(files) {
+        console.log('🎯 KnowledgeManager.uploadFiles 被调用');
+        console.log('📁 接收到的文件:', files);
+        console.log('📊 文件数量:', files ? files.length : 0);
+        
         const fileArray = Array.from(files);
         const results = [];
         
+        if (fileArray.length === 0) {
+            console.warn('⚠️ 没有选择文件');
+            Utils.showMessage('请选择要上传的文件', 'warning');
+            return results;
+        }
+        
+        console.log('🔍 开始验证文件...');
+        
         // 验证文件
         for (const file of fileArray) {
+            console.log(`📄 验证文件:`, {
+                name: file.name,
+                size: file.size,
+                type: file.type
+            });
+            
             const validation = this.validateFile(file);
             if (!validation.isValid) {
+                console.log(`❌ 文件 ${file.name} 验证失败:`, validation.error);
                 Utils.showMessage(`文件 ${file.name}: ${validation.error}`, 'error');
                 continue;
             }
+            
+            console.log(`✅ 文件 ${file.name} 验证通过`);
             
             // 添加到上传队列
             const uploadItem = {
@@ -63,13 +84,24 @@ class KnowledgeManager {
                 error: null
             };
             
+            console.log(`📦 创建上传项:`, {
+                id: uploadItem.id,
+                fileName: file.name,
+                status: uploadItem.status
+            });
+            
             this.uploadQueue.push(uploadItem);
             this.dispatchEvent('fileAdded', { uploadItem });
         }
         
+        console.log('📋 当前上传队列长度:', this.uploadQueue.length);
+        
         // 开始上传
         if (!this.isUploading) {
+            console.log('🚀 开始处理上传队列');
             this.processUploadQueue();
+        } else {
+            console.log('⚠️ 已有上传任务在进行中');
         }
         
         return results;
@@ -126,31 +158,48 @@ class KnowledgeManager {
      * @param {object} uploadItem - 上传项
      */
     async uploadSingleFile(uploadItem) {
+        console.log('🎯 KnowledgeManager.uploadSingleFile 开始执行');
+        console.log('📁 上传项信息:', {
+            id: uploadItem.id,
+            fileName: uploadItem.file.name,
+            fileSize: uploadItem.file.size,
+            status: uploadItem.status
+        });
+        
         try {
             uploadItem.status = 'uploading';
+            console.log('📤 状态更新为 uploading');
             this.dispatchEvent('fileStatusChanged', { uploadItem });
             
+            console.log('🚀 调用 api.uploadFile');
             const result = await api.uploadFile(
                 uploadItem.file,
                 (progress) => {
+                    console.log(`📊 文件 ${uploadItem.file.name} 上传进度: ${progress.toFixed(2)}%`);
                     uploadItem.progress = progress;
                     this.dispatchEvent('fileProgress', { uploadItem });
                 }
             );
             
-            if (result.success) {
+            console.log('📥 api.uploadFile 返回结果:', result);
+            
+            if (result.code === 200) {
                 uploadItem.status = 'completed';
                 uploadItem.result = result.data;
+                console.log('✅ 文件上传成功:', uploadItem.file.name);
                 Utils.showMessage(`文件 ${uploadItem.file.name} 上传成功`, 'success');
             } else {
+                console.error('❌ 上传失败，错误码:', result.code, '错误信息:', result.message);
                 throw new Error(result.message || '上传失败');
             }
         } catch (error) {
+            console.error('❌ uploadSingleFile 异常:', error);
             uploadItem.status = 'failed';
             uploadItem.error = error.message;
             Utils.showMessage(`文件 ${uploadItem.file.name} 上传失败: ${error.message}`, 'error');
         }
         
+        console.log('📤 触发 fileStatusChanged 事件，最终状态:', uploadItem.status);
         this.dispatchEvent('fileStatusChanged', { uploadItem });
     }
 
@@ -199,10 +248,21 @@ class KnowledgeManager {
                 throw new Error('搜索内容不能为空');
             }
             
+            console.log('🔍 开始搜索知识库:', { query: query.trim(), topK });
             const response = await api.searchKnowledge(query.trim(), topK);
+            console.log('📥 搜索API响应:', response);
             
             if (response.code === 200) {
                 this.searchResults = response.data || [];
+                console.log('✅ 搜索结果:', this.searchResults);
+                console.log('📊 结果数量:', this.searchResults.length);
+                
+                // 打印第一个结果的详细结构
+                if (this.searchResults.length > 0) {
+                    console.log('📄 第一个结果的数据结构:', this.searchResults[0]);
+                    console.log('📄 第一个结果的metadata:', this.searchResults[0].metadata);
+                }
+                
                 this.dispatchEvent('searchCompleted', { 
                     query, 
                     results: this.searchResults 
@@ -321,6 +381,49 @@ class KnowledgeManager {
      */
     off(eventName, callback) {
         window.removeEventListener(`knowledge:${eventName}`, callback);
+    }
+
+    /**
+     * 添加文件到上传队列（兼容方法）
+     * @param {File|FileList} files - 文件对象或文件列表
+     * @returns {Promise<Array>} 上传结果
+     */
+    async addFiles(files) {
+        return this.uploadFiles(files);
+    }
+
+    /**
+     * 清空上传队列（兼容方法）
+     */
+    clearQueue() {
+        this.clearUploadQueue();
+    }
+
+    /**
+     * 开始上传所有文件（兼容方法）
+     */
+    async uploadAll() {
+        if (!this.isUploading) {
+            await this.processUploadQueue();
+        }
+    }
+
+    /**
+     * 搜索知识库（兼容方法）
+     * @param {string} query - 搜索查询
+     * @param {number} topK - 返回结果数量
+     * @returns {Promise<Array>} 搜索结果
+     */
+    async search(query, topK = 5) {
+        return this.searchKnowledge(query, topK);
+    }
+
+    /**
+     * 移除文件（兼容方法）
+     * @param {string} fileId - 文件ID
+     */
+    removeFile(fileId) {
+        this.removeUploadItem(fileId);
     }
 }
 

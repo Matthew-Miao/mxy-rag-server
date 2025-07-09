@@ -244,10 +244,6 @@
     <div id="message-container" class="message-container"></div>
     
     <!-- JavaScript -->
-    <script src="js/common.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/knowledge.js"></script>
     <script>
         class KnowledgePage {
             constructor() {
@@ -273,10 +269,12 @@
                 
                 // 文件上传相关
                 document.getElementById('select-files-btn').addEventListener('click', () => {
+                    console.log('[KnowledgePage] Select files button clicked');
                     document.getElementById('file-input').click();
                 });
                 
                 document.getElementById('file-input').addEventListener('change', (e) => {
+                    console.log('[KnowledgePage] File input changed, files:', e.target.files);
                     this.handleFileSelect(e.target.files);
                 });
                 
@@ -285,6 +283,7 @@
                 });
                 
                 document.getElementById('upload-all-btn').addEventListener('click', () => {
+                    console.log('[KnowledgePage] Upload all button clicked');
                     knowledgeManager.uploadAll();
                 });
                 
@@ -363,23 +362,38 @@
             }
             
             setupKnowledgeEvents() {
-                // 文件队列更新
-                knowledgeManager.on('queueUpdated', (e) => {
-                    this.updateFileList(e.detail.files);
+                // 文件添加到队列
+                knowledgeManager.on('fileAdded', (e) => {
+                    this.updateFileList();
+                });
+                
+                // 文件状态变化
+                knowledgeManager.on('fileStatusChanged', (e) => {
+                    this.updateFileStatus(e.detail.uploadItem);
                 });
                 
                 // 上传进度更新
-                knowledgeManager.on('uploadProgress', (e) => {
-                    this.updateUploadProgress(e.detail);
+                knowledgeManager.on('fileProgress', (e) => {
+                    this.updateUploadProgress(e.detail.uploadItem);
                 });
                 
                 // 上传完成
                 knowledgeManager.on('uploadComplete', (e) => {
-                    this.onUploadComplete(e.detail);
+                    this.onUploadComplete();
+                });
+                
+                // 文件移除
+                knowledgeManager.on('fileRemoved', (e) => {
+                    this.updateFileList();
+                });
+                
+                // 队列清空
+                knowledgeManager.on('queueCleared', (e) => {
+                    this.updateFileList();
                 });
                 
                 // 搜索结果
-                knowledgeManager.on('searchComplete', (e) => {
+                knowledgeManager.on('searchCompleted', (e) => {
                     this.displaySearchResults(e.detail.results);
                 });
             }
@@ -423,12 +437,23 @@
             }
             
             handleFileSelect(files) {
+                console.log('[KnowledgePage] handleFileSelect called with files:', files);
+                console.log('[KnowledgePage] Number of files selected:', files.length);
+                for (let i = 0; i < files.length; i++) {
+                    console.log(`[KnowledgePage] File ${i + 1}:`, {
+                        name: files[i].name,
+                        size: files[i].size,
+                        type: files[i].type,
+                        lastModified: files[i].lastModified
+                    });
+                }
                 knowledgeManager.addFiles(files);
             }
             
-            updateFileList(files) {
+            updateFileList() {
                 const container = document.getElementById('file-items');
                 const uploadBtn = document.getElementById('upload-all-btn');
+                const files = knowledgeManager.getUploadQueue();
                 
                 container.innerHTML = '';
                 
@@ -443,39 +468,67 @@
                     return;
                 }
                 
-                files.forEach(file => {
-                    const item = this.createFileItem(file);
+                files.forEach(uploadItem => {
+                    const item = this.createFileItem(uploadItem);
                     container.appendChild(item);
                 });
                 
                 uploadBtn.disabled = false;
             }
             
-            createFileItem(file) {
+            updateFileStatus(uploadItem) {
+                const item = document.querySelector(`[data-file-id="${uploadItem.id}"]`);
+                if (item) {
+                    const statusEl = item.querySelector('.file-status');
+                    const actionsEl = item.querySelector('.file-actions');
+                    
+                    statusEl.className = `file-status ${uploadItem.status}`;
+                    statusEl.innerHTML = this.getStatusContent(uploadItem);
+                    
+                    // 更新操作按钮
+                    if (uploadItem.status === 'pending') {
+                        actionsEl.innerHTML = `
+                            <button class="action-btn remove-file-btn" data-file-id="${uploadItem.id}">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        `;
+                        const removeBtn = actionsEl.querySelector('.remove-file-btn');
+                        if (removeBtn) {
+                            removeBtn.addEventListener('click', () => {
+                                knowledgeManager.removeFile(uploadItem.id);
+                            });
+                        }
+                    } else {
+                        actionsEl.innerHTML = '';
+                    }
+                }
+            }
+            
+            createFileItem(uploadItem) {
                 const item = document.createElement('div');
                 item.className = 'file-item';
-                item.dataset.fileId = file.id;
+                item.dataset.fileId = uploadItem.id;
                 
-                const statusClass = file.status === 'uploading' ? 'uploading' : 
-                                  file.status === 'completed' ? 'completed' : 
-                                  file.status === 'error' ? 'error' : 'pending';
+                const statusClass = uploadItem.status === 'uploading' ? 'uploading' : 
+                                  uploadItem.status === 'completed' ? 'completed' : 
+                                  uploadItem.status === 'error' ? 'error' : 'pending';
                 
                 item.innerHTML = `
                     <div class="file-info">
                         <div class="file-icon">
-                            <i class="fas ${this.getFileIcon(file.name)}"></i>
+                            <i class="fas ${this.getFileIcon(uploadItem.file.name)}"></i>
                         </div>
                         <div class="file-details">
-                            <div class="file-name">${Utils.escapeHtml(file.name)}</div>
-                            <div class="file-size">${Utils.formatFileSize(file.size)}</div>
+                            <div class="file-name">${Utils.escapeHtml(uploadItem.file.name)}</div>
+                            <div class="file-size">${Utils.formatFileSize(uploadItem.file.size)}</div>
                         </div>
                     </div>
                     <div class="file-status ${statusClass}">
-                        ${this.getStatusContent(file)}
+                        ${this.getStatusContent(uploadItem)}
                     </div>
                     <div class="file-actions">
-                        ${file.status === 'pending' ? `
-                            <button class="action-btn remove-file-btn" data-file-id="${file.id}">
+                        ${uploadItem.status === 'pending' ? `
+                            <button class="action-btn remove-file-btn" data-file-id="${uploadItem.id}">
                                 <i class="fas fa-times"></i>
                             </button>
                         ` : ''}
@@ -486,7 +539,7 @@
                 const removeBtn = item.querySelector('.remove-file-btn');
                 if (removeBtn) {
                     removeBtn.addEventListener('click', () => {
-                        knowledgeManager.removeFile(file.id);
+                        knowledgeManager.removeFile(uploadItem.id);
                     });
                 }
                 
@@ -505,59 +558,43 @@
                 }
             }
             
-            getStatusContent(file) {
-                switch (file.status) {
+            getStatusContent(uploadItem) {
+                switch (uploadItem.status) {
                     case 'pending':
                         return '<i class="fas fa-clock"></i> 等待上传';
                     case 'uploading':
                         return `
                             <div class="upload-progress">
                                 <div class="progress-bar">
-                                    <div class="progress-fill" style="width: ${file.progress || 0}%"></div>
+                                    <div class="progress-fill" style="width: ${uploadItem.progress || 0}%"></div>
                                 </div>
-                                <span class="progress-text">${file.progress || 0}%</span>
+                                <span class="progress-text">${uploadItem.progress || 0}%</span>
                             </div>
                         `;
                     case 'completed':
                         return '<i class="fas fa-check"></i> 上传成功';
                     case 'error':
-                        return `<i class="fas fa-exclamation-triangle"></i> ${file.error || '上传失败'}`;
+                        return `<i class="fas fa-exclamation-triangle"></i> ${uploadItem.error || '上传失败'}`;
                     default:
                         return '';
                 }
             }
             
-            updateUploadProgress(data) {
-                const item = document.querySelector(`[data-file-id="${data.fileId}"]`);
+            updateUploadProgress(uploadItem) {
+                const item = document.querySelector(`[data-file-id="${uploadItem.id}"]`);
                 if (item) {
                     const statusEl = item.querySelector('.file-status');
                     statusEl.className = 'file-status uploading';
-                    statusEl.innerHTML = this.getStatusContent({
-                        status: 'uploading',
-                        progress: data.progress
-                    });
+                    statusEl.innerHTML = this.getStatusContent(uploadItem);
                 }
             }
             
-            onUploadComplete(data) {
-                const item = document.querySelector(`[data-file-id="${data.fileId}"]`);
-                if (item) {
-                    const statusEl = item.querySelector('.file-status');
-                    const actionsEl = item.querySelector('.file-actions');
-                    
-                    if (data.success) {
-                        statusEl.className = 'file-status completed';
-                        statusEl.innerHTML = this.getStatusContent({ status: 'completed' });
-                    } else {
-                        statusEl.className = 'file-status error';
-                        statusEl.innerHTML = this.getStatusContent({ 
-                            status: 'error', 
-                            error: data.error 
-                        });
-                    }
-                    
-                    actionsEl.innerHTML = '';
-                }
+            onUploadComplete() {
+                // 上传完成后刷新文件列表
+                this.updateFileList();
+                
+                // 显示完成消息
+                Utils.showMessage('文件上传完成', 'success');
             }
             
             handleTextInput() {
@@ -616,9 +653,13 @@
             }
             
             displaySearchResults(results) {
+                console.log('🎨 开始渲染搜索结果:', results);
+                console.log('📊 结果数量:', results.length);
+                
                 const container = document.getElementById('search-results');
                 
                 if (results.length === 0) {
+                    console.log('❌ 没有搜索结果，显示空状态');
                     container.innerHTML = `
                         <div class="empty-results">
                             <i class="fas fa-search"></i>
@@ -629,36 +670,48 @@
                     return;
                 }
                 
+                console.log('✅ 开始渲染搜索结果列表');
                 container.innerHTML = `
                     <div class="results-header">
                         <h3>搜索结果 (${results.length})</h3>
                     </div>
                     <div class="results-list">
-                        ${results.map(result => this.createResultItem(result)).join('')}
+                        ${results.map((result, index) => {
+                            console.log(`📄 渲染第${index + 1}个结果:`, result);
+                            return this.createResultItem(result);
+                        }).join('')}
                     </div>
                 `;
+                console.log('🎉 搜索结果渲染完成');
             }
             
             createResultItem(result) {
+                // 处理Spring AI Document对象的数据结构
+                const title = result.metadata?.title || result.metadata?.source || result.id || '未命名文档';
+                const content = result.content || '';
+                const source = result.metadata?.source || result.metadata?.file_name || '未知来源';
+                const score = result.metadata?.distance ? (1 - result.metadata.distance) : 0.8; // 距离转换为相似度
+                const createTime = result.metadata?.create_time || result.metadata?.timestamp;
+                
                 return `
                     <div class="result-item">
                         <div class="result-header">
-                            <h4>${Utils.escapeHtml(result.title || '未命名')}</h4>
+                            <h4>${Utils.escapeHtml(title)}</h4>
                             <div class="result-score">
-                                相关度: ${Math.round((result.score || 0) * 100)}%
+                                相关度: ${Math.round(score * 100)}%
                             </div>
                         </div>
                         <div class="result-content">
-                            ${Utils.escapeHtml(result.content || '').substring(0, 200)}...
+                            ${Utils.escapeHtml(content).substring(0, 200)}${content.length > 200 ? '...' : ''}
                         </div>
                         <div class="result-meta">
                             <span class="result-source">
                                 <i class="fas fa-file"></i>
-                                ${Utils.escapeHtml(result.source || '未知来源')}
+                                ${Utils.escapeHtml(source)}
                             </span>
-                            <span class="result-time">
-                                ${Utils.formatTime(result.createTime)}
-                            </span>
+                            ${createTime ? `<span class="result-time">
+                                ${Utils.formatTime(createTime)}
+                            </span>` : ''}
                         </div>
                     </div>
                 `;
@@ -733,5 +786,11 @@
             new KnowledgePage();
         });
     </script>
+    
+    <!-- 引入必要的JavaScript文件 -->
+    <script src="js/common.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/knowledge.js"></script>
 </body>
 </html>
