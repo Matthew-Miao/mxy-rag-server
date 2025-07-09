@@ -52,8 +52,6 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
 
     private final VectorStore vectorStore;
     private final ChatClient chatClient;
-    private final MessageWindowChatMemory messageWindowChatMemory;
-
     /**
      * 构造函数：初始化知识库服务
      * 不再使用Spring AI的MessageChatMemoryAdvisor，改为手动管理聊天记忆
@@ -65,8 +63,6 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     public KnowledgeBaseServiceImpl(VectorStore vectorStore, @Qualifier("openAiChatModel")ChatModel chatModel,
                                     MessageWindowChatMemory messageWindowChatMemory) {
         this.vectorStore = vectorStore;
-        this.messageWindowChatMemory = messageWindowChatMemory;
-
                 
         this.chatClient = ChatClient.builder(chatModel)
                 .defaultAdvisors(SimpleLoggerAdvisor.builder().build(),MessageChatMemoryAdvisor.builder(messageWindowChatMemory).build())
