@@ -366,6 +366,9 @@ class ChatManager {
                     
                     this.dispatchEvent('messageUpdated', { message: assistantMessage });
                     this.dispatchEvent('streamComplete', { message: assistantMessage });
+                    
+                    // 检查是否需要自动生成标题
+                    this.checkAndGenerateTitle();
                 }
             );
             
@@ -490,6 +493,54 @@ class ChatManager {
      */
     off(eventName, callback) {
         window.removeEventListener(`chat:${eventName}`, callback);
+    }
+
+    /**
+     * 检查并自动生成会话标题
+     */
+    async checkAndGenerateTitle() {
+        if (!this.currentSession || this.currentSession.title !== '新对话') {
+            return;
+        }
+        
+        try {
+            console.log('检测到新对话，开始自动生成标题...');
+            const generatedTitle = await this.generateSessionTitle(this.currentSession.id);
+            
+            if (generatedTitle && generatedTitle !== '新对话') {
+                // 更新会话标题
+                await this.updateSessionTitle(this.currentSession.id, generatedTitle);
+                console.log('自动生成标题成功:', generatedTitle);
+                
+                // 刷新会话列表以显示新标题
+                this.dispatchEvent('sessionTitleGenerated', { 
+                    sessionId: this.currentSession.id, 
+                    newTitle: generatedTitle 
+                });
+            }
+        } catch (error) {
+            console.error('自动生成标题失败:', error);
+        }
+    }
+
+    /**
+     * 生成会话标题
+     * @param {number} sessionId - 会话ID
+     * @returns {Promise<string>} 生成的标题
+     */
+    async generateSessionTitle(sessionId) {
+        try {
+            const response = await api.generateSessionTitle(sessionId);
+            
+            if (response.code === 200) {
+                return response.data;
+            } else {
+                throw new Error(response.message || '生成标题失败');
+            }
+        } catch (error) {
+            console.error('生成会话标题失败:', error);
+            throw error;
+        }
     }
 }
 

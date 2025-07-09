@@ -150,4 +150,27 @@ public class ChatController {
             return ApiResult.error("用户反馈失败: " + e.getMessage());
         }
     }
+
+    /**
+     * 自动生成会话标题
+     * 根据会话的聊天记录自动生成合适的标题
+     *
+     * @param sessionId 会话ID
+     * @return 生成的标题
+     */
+    @Operation(summary = "自动生成会话标题", description = "根据会话的聊天记录自动生成合适的标题")
+    @PostMapping("/generateTitle/{sessionId}")
+    public ApiResult<String> generateSessionTitle(
+            @Parameter(description = "会话ID", required = true)
+            @PathVariable Long sessionId) {
+        try {
+            logger.info("生成会话标题: sessionId={}", sessionId);
+            
+            String title = chatService.generateSessionTitle(sessionId);
+            return ApiResult.success("标题生成成功", title);
+        } catch (Exception e) {
+            logger.error("生成会话标题失败: {}", e.getMessage(), e);
+            return ApiResult.error("生成会话标题失败: " + e.getMessage());
+        }
+    }
 }

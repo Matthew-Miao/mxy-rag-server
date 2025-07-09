@@ -223,6 +223,57 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
     }
 
     /**
+     * 生成会话标题
+     * 基于对话内容智能生成简洁、相关的会话标题
+     *
+     * @param conversationContent 会话内容，包含用户问题和AI回答
+     * @return 生成的会话标题，长度不超过20个字符
+     * @throws IllegalArgumentException 当会话内容为空时抛出
+     */
+    @Override
+    public String generateSessionTitle(StringBuilder conversationContent) {
+        // 参数验证
+        if (conversationContent == null || conversationContent.isEmpty()) {
+            logger.warn("会话内容为空，无法生成标题");
+            throw new IllegalArgumentException("会话内容不能为空");
+        }
+
+        logger.info("开始生成会话标题，内容长度: {}", conversationContent.length());
+
+        try {
+            // 构建优化的提示词，确保生成高质量的标题
+            String prompt = String.format(
+                    "请根据以下对话内容生成一个简洁、准确的会话标题。要求：\n" +
+                            "1. 标题长度不超过20个字符\n" +
+                            "2. 准确概括对话主题\n" +
+                            "3. 使用简洁明了的语言\n" +
+                            "4. 不要包含标点符号\n" +
+                            "5. 直接返回标题内容，不要其他说明\n\n" +
+                            "对话内容：\n%s",
+                    conversationContent
+            );
+
+            // 调用AI生成标题
+            String generatedTitle = chatClient.prompt(prompt)
+                    .options(OpenAiChatOptions.builder()
+                            .temperature(0.3) // 降低温度以获得更稳定的结果
+                            .maxTokens(50)    // 限制输出长度
+                            .build())
+                    .call()
+                    .content();
+
+            // 清理和验证生成的标题
+            logger.info("会话标题生成成功: '{}'", generatedTitle);
+            return generatedTitle;
+
+        } catch (Exception e) {
+            logger.error("生成会话标题失败", e);
+            // 返回默认标题而不是抛出异常，确保系统稳定性
+            return "新对话";
+        }
+    }
+
+    /**
      * 获取RAG提示词
      *
      * @param query 用户查询

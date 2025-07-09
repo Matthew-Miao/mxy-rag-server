@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mxy.ai.rag.datasource.dao.ChatMessagesDAO;
 import com.mxy.ai.rag.datasource.dao.ChatSessionsDAO;
 import com.mxy.ai.rag.datasource.entity.ChatMessagesDO;
+import com.mxy.ai.rag.datasource.entity.ChatSessionsDO;
 import com.mxy.ai.rag.dto.ChatAskDTO;
 import com.mxy.ai.rag.dto.ChatFeedbackDTO;
 import com.mxy.ai.rag.dto.ChatMessagePageRequestDTO;
@@ -152,6 +153,62 @@ public class ChatServiceImpl implements ChatService {
             throw new RuntimeException("消息ID不存在");
         }
         chatMessagesDAO.submitFeedback(dto);
+    }
 
+    /**
+     * 根据聊天记录自动生成会话标题
+     *
+     * @param sessionId 会话ID
+     * @return 生成的标题
+     */
+    @Override
+    public String generateSessionTitle(Long sessionId) {
+        try {
+            ChatSessionsDO chatSessionsDO = chatSessionsDAO.getById(sessionId);
+            if (chatSessionsDO == null) {
+                throw new RuntimeException("会话ID不存在");
+            }
+            // 如果标题不是"新对话"，则直接返回 说明 已经设置过标题
+            if (!"新对话".equals(chatSessionsDO.getTitle())) {
+                return chatSessionsDO.getTitle();
+            }
+
+            // 获取会话的最近几条消息
+            List<ChatMessagesDO> recentMessages = chatMessagesDAO.getRecentMessagesBySessionId(sessionId, 2);
+            
+            if (recentMessages.isEmpty()) {
+                return "新对话";
+            }
+            
+            // 构建对话内容用于生成标题
+            StringBuilder conversationContent = new StringBuilder();
+            for (ChatMessagesDO message : recentMessages) {
+                if ("USER".equals(message.getMessageType())) {
+                    conversationContent.append("用户: ").append(message.getContent()).append("\n");
+                } else if ("ASSISTANT".equals(message.getMessageType())) {
+                    conversationContent.append("助手: ").append(message.getContent()).append("\n");
+                }
+            }
+            
+            // 调用AI生成标题
+            String prompt = "请根据以下对话内容，生成一个简洁、准确的会话标题（不超过20个字符，不要包含引号）：\n\n" + conversationContent;
+            
+            String generatedTitle = knowledgeBaseService.generateSessionTitle(conversationContent);
+            
+            // 清理生成的标题，移除可能的引号和多余空格
+            generatedTitle = generatedTitle.trim().replaceAll("[\"']", "");
+            
+            // 限制标题长度
+            if (generatedTitle.length() > 30) {
+                generatedTitle = generatedTitle.substring(0, 30);
+            }
+            
+            logger.info("为会话 {} 生成标题: {}", sessionId, generatedTitle);
+            return generatedTitle;
+            
+        } catch (Exception e) {
+            logger.error("生成会话标题失败: sessionId={}, error={}", sessionId, e.getMessage(), e);
+            return "新对话";
+        }
     }
 }

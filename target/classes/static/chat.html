@@ -411,6 +411,12 @@
                 chatManager.on('streamComplete', (e) => {
                     this.onStreamComplete();
                 });
+                
+                // 监听会话标题生成事件，刷新会话列表
+                chatManager.on('sessionTitleGenerated', (e) => {
+                    console.log('收到sessionTitleGenerated事件，刷新会话列表');
+                    this.loadSessions();
+                });
             }
             
             setupModalEvents() {

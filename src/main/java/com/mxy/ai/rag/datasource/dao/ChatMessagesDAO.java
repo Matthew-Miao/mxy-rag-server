@@ -105,4 +105,19 @@ public class ChatMessagesDAO extends ServiceImpl<ChatMessagesMapper, ChatMessage
                 .set(ChatMessagesDO::getRating, dto.getRating())
                 .update();
     }
+
+    /**
+     * 根据会话ID获取最近的消息列表
+     *
+     * @param sessionId 会话ID
+     * @param limit 限制数量
+     * @return 最近的消息列表
+     */
+    public List<ChatMessagesDO> getRecentMessagesBySessionId(Long sessionId, int limit) {
+        return lambdaQuery().eq(ChatMessagesDO::getSessionId, sessionId)
+                .eq(ChatMessagesDO::getDeleted, 0)
+                .orderByDesc(ChatMessagesDO::getId)
+                .last("LIMIT " + limit)
+                .list();
+    }
 }

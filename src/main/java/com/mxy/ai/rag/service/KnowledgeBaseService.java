@@ -53,4 +53,11 @@ public interface KnowledgeBaseService {
      */
     Flux<String> chatWithKnowledgeStream(String query, String conversationId, int topK);
 
+    /**
+     * 生成会话标题
+     *
+     * @param conversationContent 会话内容
+     * @return 会话标题
+     */
+    String generateSessionTitle(StringBuilder conversationContent);
 }

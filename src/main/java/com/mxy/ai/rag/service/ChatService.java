@@ -44,4 +44,12 @@ public interface ChatService {
      * @param dto 用户反馈请求参数
      */
     void submitFeedback(ChatFeedbackDTO dto);
+
+    /**
+     * 根据聊天记录自动生成会话标题
+     *
+     * @param sessionId 会话ID
+     * @return 生成的标题
+     */
+    String generateSessionTitle(Long sessionId);
 }

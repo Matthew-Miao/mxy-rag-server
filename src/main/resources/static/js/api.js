@@ -395,6 +395,15 @@ class API {
         return this.client.post('/chat/feedback', feedbackData);
     }
 
+    /**
+     * 生成会话标题
+     * @param {number} sessionId - 会话ID
+     * @returns {Promise} 生成的标题
+     */
+    async generateSessionTitle(sessionId) {
+        return this.client.post(`/chat/generateTitle/${sessionId}`);
+    }
+
     // ========== 知识库相关接口 ==========
 
     /**
