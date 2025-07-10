@@ -106,8 +106,8 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         // 使用文本分割器处理长文本
         List<Document> splitDocuments = new TokenTextSplitter().apply(List.of(document));
 
-        // 添加到向量存储
-        vectorStore.add(splitDocuments);
+        // 分批添加到向量存储（每批最多10个文档）
+        addDocumentsInBatches(splitDocuments);
 
         logger.info("文本内容插入完成: 生成文档片段数: {}",  splitDocuments.size());
     }
@@ -144,8 +144,8 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
                 documents = tikaReader.get();
                 logger.info("使用Tika读取器处理文件: {}", fileName);
             }
-            // 添加文档到向量存储
-            vectorStore.add(documents);
+            // 分批添加文档到向量存储（每批最多10个文档）
+            addDocumentsInBatches(documents);
 
             // 清理临时文件
             Files.deleteIfExists(tempFile);
@@ -271,6 +271,42 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
             // 返回默认标题而不是抛出异常，确保系统稳定性
             return "新对话";
         }
+    }
+
+    /**
+     * 分批添加文档到向量存储
+     * 每批最多处理10个文档，避免超过API限制
+     *
+     * @param documents 要添加的文档列表
+     */
+    private void addDocumentsInBatches(List<Document> documents) {
+        if (documents == null || documents.isEmpty()) {
+            return;
+        }
+
+        final int BATCH_SIZE = 10; // 每批最多10个文档
+        int totalDocuments = documents.size();
+        int batchCount = (totalDocuments + BATCH_SIZE - 1) / BATCH_SIZE; // 向上取整
+
+        logger.info("开始分批添加文档到向量存储: 总文档数={}, 批次数={}, 每批大小={}", 
+                   totalDocuments, batchCount, BATCH_SIZE);
+
+        for (int i = 0; i < totalDocuments; i += BATCH_SIZE) {
+            int endIndex = Math.min(i + BATCH_SIZE, totalDocuments);
+            List<Document> batch = documents.subList(i, endIndex);
+            
+            try {
+                vectorStore.add(batch);
+                logger.info("成功添加第 {}/{} 批文档: 文档数={}", 
+                           (i / BATCH_SIZE) + 1, batchCount, batch.size());
+            } catch (Exception e) {
+                logger.error("添加第 {}/{} 批文档失败: 文档数={}, 错误={}", 
+                            (i / BATCH_SIZE) + 1, batchCount, batch.size(), e.getMessage(), e);
+                throw new RuntimeException("向量存储批处理失败: " + e.getMessage(), e);
+            }
+        }
+
+        logger.info("所有文档批次添加完成: 总文档数={}", totalDocuments);
     }
 
     /**
