@@ -1,6 +1,6 @@
-# 🤖 智能知识助手 - AI驱动的RAG知识问答系统
+# 🤖 智能知识助手 - RAG知识问答系统
 
-> **"让企业知识瞬间变成AI助手"** - 基于Spring AI的RAG智能知识问答系统
+> 基于Spring AI的企业级RAG智能知识问答系统，让文档知识瞬间变成AI助手
 
 [![GitHub](https://img.shields.io/badge/GitHub-mxy--rag--server-blue?logo=github)](https://github.com/Matthew-Miao/mxy-rag-server)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.5-brightgreen)](https://spring.io/projects/spring-boot)
@@ -8,52 +8,26 @@
 [![Java](https://img.shields.io/badge/Java-17-red)](https://openjdk.java.net/)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](https://opensource.org/licenses/MIT)
 
-## 📖 项目背景
+## 🎯 项目简介
 
-作为一名Java程序员，我深知在现代软件开发中，一个人往往需要承担多重角色：
-- 🎯 **产品经理**：需求分析、产品设计、用户体验规划
-- 💻 **研发工程师**：架构设计、代码实现、技术选型
-- 🧪 **测试工程师**：测试用例设计、质量保证、性能优化
-- 🔧 **运维工程师**：部署配置、监控告警、故障处理
+智能知识助手是一个基于RAG（检索增强生成）技术的企业级知识问答系统，支持多格式文档上传、智能向量化存储、语义检索和AI问答。
 
-**智能知识助手**项目正是在这样的背景下诞生的——它展示了如何借助AI技术，让一个Java程序员能够高效完成从产品设计到运维部署的全流程工作。
-
-### 🎯 AI赋能的全流程开发
-- **产品设计阶段**：利用AI辅助需求分析、PRD文档生成、技术方案设计
-- **研发实现阶段**：通过AI代码生成、架构优化、最佳实践推荐
-- **测试验证阶段**：AI驱动的测试用例生成、自动化测试、质量评估
-- **运维部署阶段**：智能化的部署脚本、监控配置、故障诊断
-
-> 🚀 **项目愿景**：构建下一代智能知识管理平台，让每个人都能拥有专属的AI知识助手
->
-> 💡 **核心理念**：通过RAG（检索增强生成）技术，将静态知识转化为动态智能，实现人机协同的知识创新
->
-> 🎪 **实践案例**：本项目是Java程序员借助AI完成全栈开发的真实案例，从产品规划到技术实现，展示AI如何成为开发者的得力助手
-
-## 🎯 项目愿景
-
-**基于RAG技术构建企业级智能知识问答系统**，帮助企业快速将文档知识转化为智能AI助手，提升知识管理和检索效率。
-
-### 核心理念
-- 🧠 **智能问答**：基于企业文档的精准知识问答
-- 📚 **知识管理**：多格式文档上传和智能处理
+### 核心特性
+- 🧠 **智能问答**：基于知识库的精准AI问答
+- 📚 **文档管理**：支持PDF、Word、TXT等多格式文档
 - 🔍 **语义检索**：向量化存储和相似度搜索
-- 💬 **对话体验**：流式响应和上下文理解
+- 💬 **实时对话**：流式响应和会话管理
+- 👥 **用户系统**：完整的用户注册、登录、权限管理
 
-## ✨ 产品特性
+## ✨ 功能特性
 
-### 🎨 产品层面
-- **3分钟部署**：极简安装，快速上手
-- **5分钟建库**：拖拽上传，自动处理
-- **即问即答**：智能检索，精准回答
-- **来源可追溯**：每个答案都有依据
-
-### 🛠 技术层面
-- **智能问答**：基于RAG的知识库问答
-- **多格式支持**：PDF、Word、TXT、Markdown等文档
-- **向量存储**：PostgreSQL + pgvector高性能检索
-- **流式响应**：WebSocket实时对话体验
-- **混合架构**：MyBatis + Spring AI双引擎驱动
+- **📄 文档管理**：支持PDF、Word、TXT、Markdown等格式文档上传和管理
+- **🔍 智能检索**：基于向量相似度的语义搜索，精准匹配相关内容
+- **🤖 AI问答**：集成阿里云通义千问，支持流式和阻塞式问答
+- **💬 会话管理**：完整的对话会话创建、查询、删除功能
+- **👤 用户系统**：用户注册、登录、密码修改等完整用户管理
+- **🎨 前端界面**：现代化Web界面，支持聊天、知识库管理等功能
+- **⚡ 高性能**：PostgreSQL + pgvector向量存储，HikariCP连接池优化
 
 ## 🏗 技术架构
 
@@ -61,67 +35,47 @@
 - **框架**: Spring Boot 3.4.5 + Spring AI 1.0.0
 - **语言**: Java 17
 - **数据库**: PostgreSQL + pgvector (向量存储) + MySQL (业务数据)
-- **ORM**: MyBatis-Plus 3.5.5 (业务数据) + Spring AI VectorStore (向量数据)
-- **连接池**: HikariCP (高性能数据库连接池)
+- **ORM**: MyBatis-Plus 3.5.5 + Spring AI VectorStore
 - **AI模型**: 阿里云通义千问 (qwen-plus-latest) + text-embedding-v3
 
 ### 前端技术栈
-- **技术**: 原生HTML + CSS + JavaScript
-- **特点**: 轻量级、快速集成、易维护
-- **通信**: WebSocket + Fetch API
-- **样式**: CSS3 + 响应式设计
+- **技术**: 原生HTML5 + CSS3 + JavaScript ES6+
+- **界面**: 登录页面、聊天界面、知识库管理界面
+- **通信**: Fetch API + 流式响应
+- **样式**: 响应式设计 + 现代化UI组件
 
-### AI服务层
-- **LLM模型**: qwen-plus-latest (阿里云通义千问)
-- **嵌入模型**: text-embedding-v3 (1024维向量)
-- **调用方式**: OpenAI兼容模式 (DashScope API)
-- **文档处理**: Spring AI Tika Document Reader + PDF Reader
-- **向量存储**: Spring AI PGVector Store
-
-### 架构图
+### 系统架构
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     客户端 (Client)                         │
-│                   HTTP/REST API                            │
+│                   前端界面 (Web UI)                          │
+│     登录页面 | 聊天界面 | 知识库管理 | 会话管理                │
+└─────────────────────────────────────────────────────────────┘
+                              ↕ HTTP/REST API
+┌─────────────────────────────────────────────────────────────┐
+│                    Spring Boot 控制层                       │
+│  UserController | ChatController | KnowledgeBaseController │
+│  ChatSessionController | 统一异常处理 | API文档              │
 └─────────────────────────────────────────────────────────────┘
                               ↕
 ┌─────────────────────────────────────────────────────────────┐
-│                Spring Boot 应用层                           │
-│  ┌─────────────────┐  ┌─────────────────┐                  │
-│  │ KnowledgeBase   │  │   Chat API      │                  │
-│  │   Controller    │  │  (规划中)       │                  │
-│  └─────────────────┘  └─────────────────┘                  │
+│                      业务服务层                              │
+│  UserService | ChatService | KnowledgeBaseService          │
+│  ChatSessionService | Spring AI集成                        │
 └─────────────────────────────────────────────────────────────┘
                               ↕
 ┌─────────────────────────────────────────────────────────────┐
-│                    业务服务层                                │
-│  ┌─────────────────┐  ┌─────────────────┐                  │
-│  │ KnowledgeBase   │  │   Spring AI     │                  │
-│  │    Service      │  │   Integration   │                  │
-│  └─────────────────┘  └─────────────────┘                  │
+│                      数据访问层                              │
+│     MyBatis-Plus (业务数据) | Spring AI VectorStore        │
 └─────────────────────────────────────────────────────────────┘
                               ↕
 ┌─────────────────────────────────────────────────────────────┐
-│                    数据访问层                                │
-│  ┌─────────────────┐  ┌─────────────────┐                  │
-│  │   MyBatis-Plus  │  │  Spring AI      │                  │
-│  │   (业务数据)     │  │  VectorStore    │                  │
-│  └─────────────────┘  └─────────────────┘                  │
+│                      数据存储层                              │
+│        MySQL (业务数据) | PostgreSQL + pgvector (向量)      │
 └─────────────────────────────────────────────────────────────┘
                               ↕
 ┌─────────────────────────────────────────────────────────────┐
-│                    数据存储层                                │
-│  ┌─────────────────┐  ┌─────────────────┐                  │
-│  │     MySQL       │  │   PostgreSQL    │                  │
-│  │   (业务数据)     │  │   + pgvector    │                  │
-│  │                 │  │   (向量数据)     │                  │
-│  └─────────────────┘  └─────────────────┘                  │
-└─────────────────────────────────────────────────────────────┘
-                              ↕
-┌─────────────────────────────────────────────────────────────┐
-│                   外部AI服务                                │
-│              阿里云通义千问 DashScope API                    │
+│                   阿里云通义千问 API                         │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -130,57 +84,37 @@
 ```
 mxy-rag-server/
 ├── doc/                                    # 文档目录
-│   ├── PRD.md                              # 产品需求文档
-│   ├── technical_implementation.md         # 技术实现文档
-│   ├── init_database.sql                   # PostgreSQL初始化脚本
-│   └── init_mysql_database.sql             # MySQL初始化脚本
+│   ├── prd.md                             # 产品需求文档
+│   ├── 综合技术文档.md                      # 技术架构文档
+│   ├── init_database.sql                  # PostgreSQL初始化脚本
+│   └── init_mysql_database.sql            # MySQL初始化脚本
 ├── src/main/java/com/mxy/ai/rag/
-│   ├── MxyAIRagApplication.java            # Spring Boot启动类
-│   ├── config/
-│   │   └── MultiDataSourceConfig.java     # 多数据源配置
-│   ├── controller/
-│   │   └── KnowledgeBaseController.java   # 知识库API控制器
-│   ├── service/
-│   │   ├── KnowledgeBaseService.java      # 知识库服务接口
-│   │   └── impl/
-│   │       └── KnowledgeBaseServiceImpl.java # 知识库服务实现
-│   └── datasource/                        # 数据访问层
-│       ├── entity/                        # 实体类(DO)
-│       │   ├── UsersDO.java
-│       │   ├── ChatSessionsDO.java
-│       │   ├── ChatMessagesDO.java
-│       │   ├── DocumentsDO.java
-│       │   ├── DocumentChunksDO.java
-│       │   ├── SystemConfigDO.java
-│       │   └── OperationLogsDO.java
-│       ├── mapper/                        # MyBatis Mapper接口
-│       │   ├── UsersMapper.java
-│       │   ├── ChatSessionsMapper.java
-│       │   ├── ChatMessagesMapper.java
-│       │   ├── DocumentsMapper.java
-│       │   ├── DocumentChunksMapper.java
-│       │   ├── SystemConfigMapper.java
-│       │   └── OperationLogsMapper.java
-│       └── dao/                           # DAO业务层
-│           ├── UsersDAO.java
-│           ├── ChatSessionsDAO.java
-│           ├── ChatMessagesDAO.java
-│           ├── DocumentsDAO.java
-│           ├── DocumentChunksDAO.java
-│           ├── SystemConfigDAO.java
-│           └── OperationLogsDAO.java
+│   ├── web/controller/                    # 控制器层
+│   │   ├── UserController.java           # 用户管理API
+│   │   ├── ChatController.java           # 智能对话API
+│   │   ├── ChatSessionController.java    # 会话管理API
+│   │   └── KnowledgeBaseController.java  # 知识库管理API
+│   ├── service/                          # 业务服务层
+│   │   ├── UserService.java              # 用户服务
+│   │   ├── ChatService.java              # 对话服务
+│   │   ├── ChatSessionService.java       # 会话服务
+│   │   └── KnowledgeBaseService.java     # 知识库服务
+│   ├── datasource/                       # 数据访问层
+│   │   ├── entity/                       # 实体类
+│   │   ├── mapper/                       # MyBatis Mapper
+│   │   └── dao/                          # DAO层
+│   └── config/                           # 配置类
+│       └── MultiDataSourceConfig.java   # 多数据源配置
 ├── src/main/resources/
-│   ├── application.yaml                   # 应用配置文件
-│   └── mapper/                           # MyBatis XML映射文件
-│       ├── UsersMapper.xml
-│       ├── ChatSessionsMapper.xml
-│       ├── ChatMessagesMapper.xml
-│       ├── DocumentsMapper.xml
-│       ├── DocumentChunksMapper.xml
-│       ├── SystemConfigMapper.xml
-│       └── OperationLogsMapper.xml
-├── pom.xml                               # Maven依赖配置
-└── README.md                             # 项目说明文档
+│   ├── static/                           # 前端静态资源
+│   │   ├── login.html                    # 登录页面
+│   │   ├── chat.html                     # 聊天界面
+│   │   ├── knowledge.html                # 知识库管理
+│   │   ├── css/                          # 样式文件
+│   │   └── js/                           # JavaScript文件
+│   ├── application.yaml                  # 应用配置
+│   └── mapper/                           # MyBatis XML映射
+└── pom.xml                               # Maven依赖配置
 ```
 
 ## 🚀 快速开始
@@ -264,26 +198,83 @@ curl "http://localhost:9000/api/v1/knowledge-base/search?query=测试&topK=5"
 
 ## 📡 核心API接口
 
-### 🤖 智能对话API (开发中)
+### 👤 用户管理API
 
 ```http
-# 发送消息 (规划中)
-POST /api/v1/chat/send
-Content-Type: application/json
+# 用户注册
+POST /api/v1/user/register
 {
-  "sessionId": "session_123",
-  "message": "什么是RAG技术？",
-  "stream": true
+  "username": "用户名",
+  "password": "密码",
+  "email": "邮箱"
 }
 
-# 获取会话列表 (规划中)
-GET /api/v1/chat/sessions?page=1&size=20
+# 用户登录
+POST /api/v1/user/login
+{
+  "username": "用户名",
+  "password": "密码"
+}
 
-# 创建新会话 (规划中)
+# 修改密码
+PUT /api/v1/user/change-password
+{
+  "oldPassword": "旧密码",
+  "newPassword": "新密码"
+}
+```
+
+### 🤖 智能对话API
+
+```http
+# 智能问答（流式）
+POST /api/v1/chat/ask-stream
+{
+  "sessionId": "会话ID",
+  "question": "问题内容",
+  "topK": 5
+}
+
+# 智能问答（阻塞式）
+POST /api/v1/chat/ask
+{
+  "sessionId": "会话ID",
+  "question": "问题内容",
+  "topK": 5
+}
+
+# 获取对话历史
+GET /api/v1/chat/messages?sessionId=xxx&page=1&size=20
+
+# 对话反馈
+POST /api/v1/chat/feedback
+{
+  "messageId": "消息ID",
+  "rating": 5,
+  "feedback": "反馈内容"
+}
+```
+
+### 💬 会话管理API
+
+```http
+# 创建会话
 POST /api/v1/chat/sessions
 {
-  "title": "新对话"
+  "title": "会话标题"
 }
+
+# 获取会话列表
+GET /api/v1/chat/sessions?page=1&size=20
+
+# 更新会话标题
+PUT /api/v1/chat/sessions/{sessionId}/title
+{
+  "title": "新标题"
+}
+
+# 删除会话
+DELETE /api/v1/chat/sessions/{sessionId}
 ```
 
 ### 📚 知识库管理API
@@ -296,58 +287,28 @@ file=@document.pdf
 
 # 插入文本内容
 POST /api/v1/knowledge-base/insert-text
-Content-Type: application/x-www-form-urlencoded
 content=要插入的文本内容
 
 # 相似性搜索
 GET /api/v1/knowledge-base/search?query=搜索内容&topK=5
 
-# 获取文档列表
-GET /api/v1/knowledge-base/documents
-
-# 删除文档
-DELETE /api/v1/knowledge-base/documents/{id}
+# 智能问答（流式）
+GET /api/v1/knowledge-base/chat-stream?query=问题&topK=5
 ```
 
-### 🔌 WebSocket实时通信 (规划中)
+## 🎨 前端界面
 
-```javascript
-// 连接WebSocket (规划中)
-const ws = new WebSocket('ws://localhost:9000/api/v1/chat/stream');
+### 页面功能
+- **🔐 登录页面** (`login.html`): 用户登录界面，支持用户名/密码登录
+- **💬 聊天界面** (`chat.html`): 智能对话界面，支持实时问答、会话管理、Markdown渲染
+- **📚 知识库管理** (`knowledge.html`): 文档上传、管理和搜索界面
 
-// 发送消息
-ws.send(JSON.stringify({
-  "type": "chat",
-  "sessionId": "session_123",
-  "message": "用户问题"
-}));
-
-// 接收响应
-ws.onmessage = (event) => {
-  const response = JSON.parse(event.data);
-  console.log(response.content);
-};
-```
-
-## 🎯 核心功能特性
-
-### 📚 知识库管理
-- **文档上传**: 支持PDF、Word、TXT、Markdown等多种格式
-- **智能处理**: 自动文档解析和文本提取
-- **向量化存储**: 基于text-embedding-v3的1024维向量存储
-- **批量管理**: 支持批量上传和文档管理
-
-### 🔍 智能检索
-- **语义搜索**: 基于向量相似度的智能检索
-- **精准匹配**: 支持关键词和语义双重匹配
-- **来源追溯**: 每个答案都标注具体的文档来源
-- **相关性排序**: 按相似度分数排序检索结果
-
-### 🤖 AI问答 (规划中)
-- **自然对话**: 支持自然语言问答交互
-- **上下文理解**: 多轮对话的上下文记忆
-- **流式响应**: 实时显示AI回答过程
-- **质量评价**: 支持用户对回答质量进行评分
+### 界面特性
+- **响应式设计**: 适配桌面和移动设备
+- **现代化UI**: 简洁美观的界面设计
+- **实时交互**: 流式响应显示，提升用户体验
+- **Markdown支持**: 支持代码高亮和格式化显示
+- **文件拖拽**: 支持拖拽上传文档文件
 
 ## ⚙️ 配置说明
 
@@ -376,14 +337,14 @@ mysql.password=your_password                   # MySQL密码
 
 ## 📋 项目状态
 
-- ✅ **数据库设计**: PostgreSQL + pgvector + MySQL + MyBatis-Plus集成
-- ✅ **知识库管理**: 文档上传、文本插入、向量存储
-- ✅ **智能检索**: 基于向量相似度的语义搜索
-- ✅ **多数据源配置**: PostgreSQL(向量) + MySQL(业务)双数据源
-- 🚧 **AI对话功能**: 智能问答和会话管理 (开发中)
-- 🚧 **前端界面**: 原生HTML + CSS + JavaScript (开发中)
-- 📋 **WebSocket**: 实时通信和流式响应 (规划中)
-- 📋 **部署方案**: Docker + K8s (规划中)
+- ✅ **数据库设计**: PostgreSQL + pgvector + MySQL双数据源集成
+- ✅ **知识库管理**: 文档上传、文本插入、向量存储、语义搜索
+- ✅ **用户系统**: 用户注册、登录、密码修改、权限管理
+- ✅ **智能对话**: AI问答、流式响应、会话管理、对话历史
+- ✅ **前端界面**: 登录页面、聊天界面、知识库管理界面
+- ✅ **API接口**: 完整的RESTful API，支持Swagger文档
+- 📋 **WebSocket**: 实时通信优化 (规划中)
+- 📋 **部署方案**: Docker容器化部署 (规划中)
 
 ## 📚 相关文档
 
@@ -420,6 +381,6 @@ mysql.password=your_password                   # MySQL密码
 
 ---
 
-**许可证**: Apache 2.0 License  
-**版本**: v1.0 MVP  
-**最后更新**: 2025年7月
+**许可证**: MIT License  
+**版本**: v1.0  
+**最后更新**: 2025年1月
