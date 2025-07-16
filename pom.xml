@@ -26,6 +26,7 @@
         <mybatis-plus.version>3.5.5</mybatis-plus.version>
         <redisson.version>3.44.0</redisson.version>
         <spring-cloud-alibaba.version>2023.0.1.2</spring-cloud-alibaba.version>
+        <dashscope-version>1.0.0.2</dashscope-version>
         <knife4j.version>4.1.0</knife4j.version>
 
     </properties>
@@ -46,6 +47,12 @@
                 <version>${spring-cloud-alibaba.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.alibaba.cloud.ai</groupId>
+                <artifactId>spring-ai-alibaba-starter-dashscope</artifactId>
+                <version>${dashscope-version}</version>
             </dependency>
 
             <dependency>
@@ -94,10 +101,15 @@
             <artifactId>spring-ai-model-chat-memory-repository-jdbc</artifactId>
         </dependency>
 
-        <!-- Spring AI OpenAI Starter -->
+<!--        &lt;!&ndash; Spring AI OpenAI Starter &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.ai</groupId>-->
+<!--            <artifactId>spring-ai-starter-model-openai</artifactId>-->
+<!--        </dependency>-->
+
         <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-starter-model-openai</artifactId>
+            <groupId>com.alibaba.cloud.ai</groupId>
+            <artifactId>spring-ai-alibaba-starter-dashscope</artifactId>
         </dependency>
 
         <dependency>

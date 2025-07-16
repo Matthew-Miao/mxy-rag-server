@@ -1,5 +1,6 @@
 package com.mxy.ai.rag.service.impl;
 
+import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatOptions;
 import com.mxy.ai.rag.service.KnowledgeBaseService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,7 +11,6 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.document.Document;
-import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.reader.pdf.PagePdfDocumentReader;
 import org.springframework.ai.reader.tika.TikaDocumentReader;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
@@ -60,13 +60,13 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
      * @param chatModel 聊天模型
      * @param messageWindowChatMemory 消息窗口聊天记忆
      */
-    public KnowledgeBaseServiceImpl(VectorStore vectorStore, @Qualifier("openAiChatModel")ChatModel chatModel,
+    public KnowledgeBaseServiceImpl(VectorStore vectorStore, @Qualifier("dashscopeChatModel")ChatModel chatModel,
                                     MessageWindowChatMemory messageWindowChatMemory) {
         this.vectorStore = vectorStore;
                 
         this.chatClient = ChatClient.builder(chatModel)
                 .defaultAdvisors(SimpleLoggerAdvisor.builder().build(),MessageChatMemoryAdvisor.builder(messageWindowChatMemory).build())
-                .defaultOptions(OpenAiChatOptions.builder().temperature(0.7).build())
+                .defaultOptions(DashScopeChatOptions.builder().withTopP(0.7).build())
                 .build();
     }
 
@@ -255,9 +255,9 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
 
             // 调用AI生成标题
             String generatedTitle = chatClient.prompt(prompt)
-                    .options(OpenAiChatOptions.builder()
-                            .temperature(0.3) // 降低温度以获得更稳定的结果
-                            .maxTokens(50)    // 限制输出长度
+                    .options(DashScopeChatOptions.builder()
+                            .withTemperature(0.3) // 降低温度以获得更稳定的结果
+                            .withMaxToken(50)    // 限制输出长度
                             .build())
                     .call()
                     .content();
