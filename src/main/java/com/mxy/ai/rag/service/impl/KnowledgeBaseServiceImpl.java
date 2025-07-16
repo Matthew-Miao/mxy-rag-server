@@ -59,6 +59,15 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
      * @param vectorStore 向量存储
      * @param chatModel 聊天模型
      * @param messageWindowChatMemory 消息窗口聊天记忆
+     *                                  public KnowledgeBaseServiceImpl(VectorStore vectorStore, @Qualifier("openAiChatModel")ChatModel chatModel,
+     *                                     MessageWindowChatMemory messageWindowChatMemory) {
+     *         this.vectorStore = vectorStore;
+     *
+     *         this.chatClient = ChatClient.builder(chatModel)
+     *                 .defaultAdvisors(SimpleLoggerAdvisor.builder().build(),MessageChatMemoryAdvisor.builder(messageWindowChatMemory).build())
+     *                 .defaultOptions(OpenAiChatOptions.builder().temperature(0.7).build())
+     *                 .build();
+     *     }
      */
     public KnowledgeBaseServiceImpl(VectorStore vectorStore, @Qualifier("dashscopeChatModel")ChatModel chatModel,
                                     MessageWindowChatMemory messageWindowChatMemory) {
