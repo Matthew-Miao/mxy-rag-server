@@ -189,7 +189,7 @@ export MYSQL_PASSWORD=your_mysql_password
 ```
 
 **获取DashScope API Key**：
-1. 访问 [阿里云模型服务灵积](https://dashscope.aliyuncs.com/)
+1. 访问 [阿里云百炼平台](https://bailian.console.aliyun.com/)
 2. 注册并登录阿里云账号
 3. 开通DashScope服务
 4. 在控制台获取API Key
