@@ -7,10 +7,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
+import org.springframework.ai.chat.client.advisor.vectorstore.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.reader.markdown.MarkdownDocumentReader;
 import org.springframework.ai.reader.pdf.PagePdfDocumentReader;
 import org.springframework.ai.reader.tika.TikaDocumentReader;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
@@ -74,7 +76,8 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
         this.vectorStore = vectorStore;
                 
         this.chatClient = ChatClient.builder(chatModel)
-                .defaultAdvisors(SimpleLoggerAdvisor.builder().build(),MessageChatMemoryAdvisor.builder(messageWindowChatMemory).build())
+                .defaultAdvisors(SimpleLoggerAdvisor.builder().build(),
+                        MessageChatMemoryAdvisor.builder(messageWindowChatMemory).build(), QuestionAnswerAdvisor.builder(vectorStore).build())
                 .defaultOptions(DashScopeChatOptions.builder().withTopP(0.7).build())
                 .build();
     }
@@ -147,7 +150,10 @@ public class KnowledgeBaseServiceImpl implements KnowledgeBaseService {
                 PagePdfDocumentReader pdfReader = new PagePdfDocumentReader(tempFile.toUri().toString());
                 documents = pdfReader.get();
                 logger.info("使用PDF读取器处理文件: {}", fileName);
-            } else {
+            }else if (fileName.toLowerCase().contains(".md")){
+                documents = new MarkdownDocumentReader(tempFile.toUri().toString()).get();
+            }
+            else {
                 // 使用Tika读取器处理其他类型文件
                 TikaDocumentReader tikaReader = new TikaDocumentReader(tempFile.toUri().toString());
                 documents = tikaReader.get();
